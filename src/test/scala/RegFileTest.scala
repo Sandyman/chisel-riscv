@@ -5,8 +5,8 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class BasicTest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32
-    val n = 32
+    val m = 32 // Number of registers
+    val n = 32 // Width of register in bits
     it should "be initialised with all 0s" in {
         test(new RegFile(m, n)) { r =>
             for (t <- 0 until m) {
