@@ -9,12 +9,12 @@ import chisel3.util.log2Ceil
 // must be initialised to 0 upon reset.
 //
 class RegFile(val m: Int, val n: Int) extends Module {
-    val width = log2Ceil(m)
+    val addrWidth = log2Ceil(m)
     val io = IO(new Bundle {
         val wen     = Input(Bool())
-        val wrAddr  = Input(UInt(width.W))
-        val rdAddr1 = Input(UInt(width.W))
-        val rdAddr2 = Input(UInt(width.W))
+        val wrAddr  = Input(UInt(addrWidth.W))
+        val rdAddr1 = Input(UInt(addrWidth.W))
+        val rdAddr2 = Input(UInt(addrWidth.W))
         val wrData  = Input(UInt(n.W))
         val rdData1 = Output(UInt(n.W))
         val rdData2 = Output(UInt(n.W))
