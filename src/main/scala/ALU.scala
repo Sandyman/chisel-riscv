@@ -40,6 +40,9 @@ class ALU(val m: Int, val n: Int) extends Module {
                 addi -> (io.rs1Data + imm32s),
                 slti -> (Mux(io.rs1Data < imm32s, 1.U, 0.U)),
                 sltiu -> (Mux(io.rs1Data < imm32u, 1.U, 0.U)),
+                xori -> (io.rs1Data ^ imm32s),
+                ori -> (io.rs1Data | imm32s),
+                andi -> (io.rs1Data & imm32s),
             )
         )
     }
