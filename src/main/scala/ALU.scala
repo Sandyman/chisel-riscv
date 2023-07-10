@@ -32,7 +32,8 @@ class ALU(val m: Int, val n: Int) extends Module {
             io.funct3,
             io.rs1Data,
             Seq(
-                addi -> (io.rs1Data + imm32s)
+                addi -> (io.rs1Data + imm32s),
+                slti -> (Mux(io.rs1Data < imm32s, 1.U, 0.U))
             )
         )
     }
