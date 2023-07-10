@@ -23,8 +23,13 @@ class ALU(val m: Int, val n: Int) extends Module {
         val rdData  = Output(UInt(n.W))
     })
 
+    // Sign-extend the immediate value
     val extended_sign = Fill(n - 12, io.imm12(11))
     val imm32s = Cat(extended_sign, io.imm12)
+
+    // Just pad the immediate value
+    val extended_pad = Fill(n - 12, 0.U(1.W))
+    val imm32u = Cat(extended_pad, io.imm12)
 
     io.rdData := 0.U
     when (io.enabled) {
@@ -33,7 +38,8 @@ class ALU(val m: Int, val n: Int) extends Module {
             io.rs1Data,
             Seq(
                 addi -> (io.rs1Data + imm32s),
-                slti -> (Mux(io.rs1Data < imm32s, 1.U, 0.U))
+                slti -> (Mux(io.rs1Data < imm32s, 1.U, 0.U)),
+                sltiu -> (Mux(io.rs1Data < imm32u, 1.U, 0.U)),
             )
         )
     }
