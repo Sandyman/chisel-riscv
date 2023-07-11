@@ -8,17 +8,26 @@ import chisel3.util.log2Ceil
 // to it should not yield any effect whatsoever). All registers
 // must be initialised to 0 upon reset.
 //
-class RegFile(val m: Int, val xlen: Int) extends Module {
-    val addrWidth = log2Ceil(m)
-    val io = IO(new Bundle {
-        val wen     = Input(Bool())
-        val wrAddr  = Input(UInt(addrWidth.W))
-        val rdAddr1 = Input(UInt(addrWidth.W))
-        val rdAddr2 = Input(UInt(addrWidth.W))
-        val wrData  = Input(UInt(xlen.W))
-        val rdData1 = Output(UInt(xlen.W))
-        val rdData2 = Output(UInt(xlen.W))
-    })
+
+class RegFileIO(m: Int, xlen: Int) extends Bundle {
+    def addrWidth = log2Ceil(m)
+    val wen     = Input(Bool())
+    val wrAddr  = Input(UInt(addrWidth.W))
+    val rdAddr1 = Input(UInt(addrWidth.W))
+    val rdAddr2 = Input(UInt(addrWidth.W))
+    val wrData  = Input(UInt(xlen.W))
+    val rdData1 = Output(UInt(xlen.W))
+    val rdData2 = Output(UInt(xlen.W))
+}
+
+trait RegFile extends Module {
+    def m: Int
+    def xlen: Int
+    val io: RegFileIO
+}
+
+class SimpleRegFile(val m: Int, val xlen: Int) extends RegFile {
+    val io = IO(new RegFileIO(m, xlen))
 
     // Instantiate the register file and initialise all to 0
     val regs = RegInit(VecInit(Seq.fill(m)(0.U(xlen.W))))
