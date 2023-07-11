@@ -14,12 +14,12 @@ object Funct3 {
 import Funct3._
 
 class AluIO(xlen: Int) extends Bundle {
-        val enabled = Input(Bool())
-        val imm12   = Input(UInt(12.W))
-        val funct3  = Input(UInt(3.W))
-        val rs1Data = Input(UInt(xlen.W))
-        val rs2Data = Input(UInt(xlen.W))
-        val rdData  = Output(UInt(xlen.W))
+    val enabled = Input(Bool())
+    val imm12   = Input(UInt(12.W))
+    val funct3  = Input(UInt(3.W))
+    val rs1Data = Input(UInt(xlen.W))
+    val rs2Data = Input(UInt(xlen.W))
+    val rdData  = Output(UInt(xlen.W))
 }
 
 trait Alu extends Module {
