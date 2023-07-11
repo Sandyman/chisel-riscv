@@ -13,23 +13,27 @@ object Funct3 {
 
 import Funct3._
 
-class ALU(val m: Int, val n: Int) extends Module {
+class ALU(val m: Int, val xlen: Int) extends Module {
     val addrWidth = log2Ceil(m)
     val io = IO(new Bundle {
         val enabled = Input(Bool())
         val imm12   = Input(UInt(12.W))
         val funct3  = Input(UInt(3.W))
-        val rs1Data = Input(UInt(n.W))
-        val rdData  = Output(UInt(n.W))
+        val rs1Data = Input(UInt(xlen.W))
+        val rs2Data = Input(UInt(xlen.W))
+        val rdData  = Output(UInt(xlen.W))
     })
 
+    val funct7 = io.imm12(11, 5)
+    val shamt = io.imm12(4, 0)
+
     // Sign-extend the immediate value
-    val extended_sign = Fill(n - 12, io.imm12(11))
-    val imm32s = Cat(extended_sign, io.imm12)
+    val extended_sign = Fill(xlen - 12, io.imm12(11))
+    val imm_xlen_s = Cat(extended_sign, io.imm12)
 
     // Just pad the immediate value
-    val extended_pad = Fill(n - 12, 0.U(1.W))
-    val imm32u = Cat(extended_pad, io.imm12)
+    val ext_xlen_u = 0.U((xlen - 12).W)
+    val imm_xlen_u = Cat(ext_xlen_u, io.imm12)
 
     io.rdData := 0.U
     when (io.enabled) {
@@ -37,12 +41,12 @@ class ALU(val m: Int, val n: Int) extends Module {
             io.funct3,
             io.rs1Data,
             Seq(
-                addi -> (io.rs1Data + imm32s),
-                slti -> (Mux(io.rs1Data < imm32s, 1.U, 0.U)),
-                sltiu -> (Mux(io.rs1Data < imm32u, 1.U, 0.U)),
-                xori -> (io.rs1Data ^ imm32s),
-                ori -> (io.rs1Data | imm32s),
-                andi -> (io.rs1Data & imm32s),
+                addi -> (io.rs1Data + imm_xlen_s),
+                slti -> (Mux(io.rs1Data < imm_xlen_s, 1.U, 0.U)),
+                sltiu -> (Mux(io.rs1Data < imm_xlen_u, 1.U, 0.U)),
+                xori -> (io.rs1Data ^ imm_xlen_s),
+                ori -> (io.rs1Data | imm_xlen_s),
+                andi -> (io.rs1Data & imm_xlen_s),
             )
         )
     }
