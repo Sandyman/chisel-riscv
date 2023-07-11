@@ -13,16 +13,23 @@ object Funct3 {
 
 import Funct3._
 
-class ALU(val m: Int, val xlen: Int) extends Module {
-    val addrWidth = log2Ceil(m)
-    val io = IO(new Bundle {
+class AluIO(xlen: Int) extends Bundle {
         val enabled = Input(Bool())
         val imm12   = Input(UInt(12.W))
         val funct3  = Input(UInt(3.W))
         val rs1Data = Input(UInt(xlen.W))
         val rs2Data = Input(UInt(xlen.W))
         val rdData  = Output(UInt(xlen.W))
-    })
+}
+
+trait Alu extends Module {
+    def m: Int
+    def xlen: Int
+    val io: AluIO
+}
+
+class AluSimple(val m: Int, val xlen: Int) extends Alu {
+    val io = IO(new AluIO(xlen))
 
     val funct7 = io.imm12(11, 5)
     val shamt = io.imm12(4, 0)

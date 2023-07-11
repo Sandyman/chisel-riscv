@@ -8,7 +8,7 @@ class BasicALUADDITest extends AnyFlatSpec with ChiselScalatestTester {
     val m = 32 // Number of registers
     val xlen = 32 // Width of register in bits
     it should "add positive immediate to register" in {
-        test(new ALU(m, xlen)) { r =>
+        test(new AluSimple(m, xlen)) { r =>
             r.io.enabled.poke(1)
             r.io.imm12.poke(1)
             r.io.funct3.poke(addi)
@@ -17,7 +17,7 @@ class BasicALUADDITest extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
     it should "add negative immediate to register" in {
-        test(new ALU(m, xlen)) { r =>
+        test(new AluSimple(m, xlen)) { r =>
             r.io.enabled.poke(1)
             r.io.imm12.poke((1 << 12) - 1)
             r.io.funct3.poke(addi)
@@ -26,7 +26,7 @@ class BasicALUADDITest extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
     it should "return negative number when added to 0" in {
-        test(new ALU(m, xlen)) { r =>
+        test(new AluSimple(m, xlen)) { r =>
             r.io.enabled.poke(1)
             r.io.imm12.poke((1 << 12) - 2)
             r.io.funct3.poke(addi)
@@ -35,7 +35,7 @@ class BasicALUADDITest extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
     it should "allow adding a positive number to a negative number" in {
-        test(new ALU(m, xlen)) { r =>
+        test(new AluSimple(m, xlen)) { r =>
             r.io.enabled.poke(1)
             r.io.imm12.poke(15)
             r.io.funct3.poke(addi)
@@ -48,7 +48,7 @@ class BasicALUSLTITest extends AnyFlatSpec with ChiselScalatestTester {
     val m = 32 // Number of registers
     val xlen = 32 // Width of register in bits
     it should "compare positive numbers" in {
-        test(new ALU(m, xlen)) { r =>
+        test(new AluSimple(m, xlen)) { r =>
             r.io.enabled.poke(1)
             r.io.imm12.poke(15)
             r.io.funct3.poke(slti)
@@ -63,7 +63,7 @@ class BasicALUSLTITest extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
     it should "compare negative numbers" in {
-        test(new ALU(m, xlen)) { r =>
+        test(new AluSimple(m, xlen)) { r =>
             r.io.enabled.poke(1)
             r.io.imm12.poke("hffe".U)
             r.io.funct3.poke(slti)
@@ -82,7 +82,7 @@ class BasicALUSLTIUTest extends AnyFlatSpec with ChiselScalatestTester {
     val m = 32 // Number of registers
     val xlen = 32 // Width of register in bits
     it should "compare positive numbers" in {
-        test(new ALU(m, xlen)) { r =>
+        test(new AluSimple(m, xlen)) { r =>
             r.io.enabled.poke(1)
             r.io.imm12.poke(15)
             r.io.funct3.poke(slti)
@@ -105,7 +105,7 @@ class BasicALUXORITest extends AnyFlatSpec with ChiselScalatestTester {
     val m = 32 // Number of registers
     val xlen = 32 // Width of register in bits
     it should "do XORI correctly" in {
-        test(new ALU(m, xlen)) { r =>
+        test(new AluSimple(m, xlen)) { r =>
             r.io.enabled.poke(1)
             r.io.imm12.poke("hfff".U)
             r.io.funct3.poke(xori)
@@ -121,7 +121,7 @@ class BasicALUORITest extends AnyFlatSpec with ChiselScalatestTester {
     val m = 32 // Number of registers
     val xlen = 32 // Width of register in bits
     it should "do ORI correctly" in {
-        test(new ALU(m, xlen)) { r =>
+        test(new AluSimple(m, xlen)) { r =>
             r.io.enabled.poke(1)
             r.io.imm12.poke("hfff".U)
             r.io.funct3.poke(ori)
@@ -138,7 +138,7 @@ class BasicALUANDITest extends AnyFlatSpec with ChiselScalatestTester {
     val m = 32 // Number of registers
     val xlen = 32 // Width of register in bits
     it should "do ORI correctly" in {
-        test(new ALU(m, xlen)) { r =>
+        test(new AluSimple(m, xlen)) { r =>
             r.io.enabled.poke(1)
             r.io.imm12.poke("hfff".U)
             r.io.funct3.poke(andi)
