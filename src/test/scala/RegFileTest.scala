@@ -4,9 +4,9 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class BasicRegFileTest extends AnyFlatSpec with ChiselScalatestTester {
     val m = 32 // Number of registers
-    val n = 32 // Width of register in bits
+    val xlen = 32 // Width of register in bits
     it should "be initialised with all 0s" in {
-        test(new RegFile(m, n)) { r =>
+        test(new RegFile(m, xlen)) { r =>
             for (t <- 0 until m) {
                 // Check that initialised value is 0
                 r.io.rdAddr1.poke(t)
@@ -17,7 +17,7 @@ class BasicRegFileTest extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
     it should "always return 0 for register address 0" in {
-        test(new RegFile(m, n)) { r =>
+        test(new RegFile(m, xlen)) { r =>
             // Write a non-0 value into register 0
             r.io.wen.poke(1)
             r.io.wrAddr.poke(0)
@@ -36,10 +36,10 @@ class BasicRegFileTest extends AnyFlatSpec with ChiselScalatestTester {
     }
     it should "write and read back random values" in {
         val rnd = new scala.util.Random
-        test(new RegFile(m, n)) { r =>
+        test(new RegFile(m, xlen)) { r =>
             for (t <- 1 until m) {
                 // Create some random value
-                val num = rnd.nextInt((1 << (n - 1)) - 1)
+                val num = rnd.nextInt((1 << (xlen - 1)) - 1)
 
                 // And write to register        
                 r.io.wen.poke(1)
