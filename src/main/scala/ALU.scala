@@ -13,7 +13,15 @@ object Funct3 {
     val AND    = 7.U(3.W)
 }
 
+object Shift2 {
+    val SRLI  = 0.U(2.W)
+    val SRAI  = 1.U(2.W)
+    val SRL   = 2.U(2.W)
+    val SRA   = 3.U(2.W)
+}
+
 import Funct3._
+import Shift2._
 
 class AluIO(xlen: Int) extends Bundle {
     val inst = Input(UInt(xlen.W))
@@ -92,13 +100,14 @@ class AluSimple(val m: Int, val xlen: Int) extends Alu {
                     (opcode2 === 2.U(2.W)) -> xor(io.rs2Data),
                 )
             )),
-            SR -> (MuxCase(
+            SR -> (MuxLookup(
+                opcode2,
                 io.rs1Data,
                 Seq(
-                    (opcode2 === 0.U(2.W)) -> srl(shamt),
-                    (opcode2 === 1.U(2.W)) -> sra(shamt),
-                    (opcode2 === 2.U(2.W)) -> srl(io.rs2Data(4,0)),
-                    (opcode2 === 3.U(2.W)) -> sra(io.rs2Data(4,0)),
+                    SRLI -> srl(shamt),
+                    SRAI -> sra(shamt),
+                    SRL -> srl(io.rs2Data(4,0)),
+                    SRA -> sra(io.rs2Data(4,0)),
                 )
             )),
             OR -> (MuxCase(
