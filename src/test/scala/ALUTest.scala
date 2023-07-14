@@ -36,6 +36,18 @@ class BasicALUADDITest extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
 }
+class BasicALUSUBTest extends AnyFlatSpec with ChiselScalatestTester {
+    val m = 32 // Number of registers
+    val xlen = 32 // Width of register in bits
+    it should "subtract numbers" in {
+        test(new AluSimple(m, xlen)) { r =>
+            r.io.inst.poke("b0100_0000_1100_0000_0000_0000_0011_0011".U)
+            r.io.rs1Data.poke(13)
+            r.io.rs2Data.poke(12)
+            r.io.rdData.expect(1)        
+        }
+    }    
+}
 class BasicALUSLTITest extends AnyFlatSpec with ChiselScalatestTester {
     val m = 32 // Number of registers
     val xlen = 32 // Width of register in bits
