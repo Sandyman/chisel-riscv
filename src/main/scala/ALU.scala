@@ -65,7 +65,6 @@ class AluSimple(val m: Int, val xlen: Int) extends Alu {
     val or: UInt => UInt = a => io.rs1Data | a
     val and: UInt => UInt = a => io.rs1Data & a
 
-    io.rdData := io.rs1Data
     io.rdData := MuxLookup(
         funct3,
         io.rs1Data,
