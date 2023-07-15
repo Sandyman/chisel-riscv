@@ -2,26 +2,26 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental._
 
-object Funct3 {
-    val ADD    = 0.U(3.W)
-    val SLL    = 1.U(3.W)
-    val SLT    = 2.U(3.W)
-    val SLTU   = 3.U(3.W)
-    val XOR    = 4.U(3.W)
-    val SR     = 5.U(3.W)
-    val OR     = 6.U(3.W)
-    val AND    = 7.U(3.W)
+object Operation {
+    val ADDI   =  0.U(4.W)
+    val ADD    =  1.U(4.W)
+    val SLLI   =  2.U(4.W)
+    val SLL    =  3.U(4.W)
+    val SLTI   =  4.U(4.W)
+    val SLT    =  5.U(4.W)
+    val SLTIU  =  6.U(4.W)
+    val SLTU   =  7.U(4.W)
+    val XORI   =  8.U(4.W)
+    val XOR    =  9.U(4.W)
+    val SRI    = 10.U(4.W)
+    val SR     = 11.U(4.W)
+    val ORI    = 12.U(4.W)
+    val OR     = 13.U(4.W)
+    val ANDI   = 14.U(4.W)
+    val AND    = 15.U(4.W)
 }
 
-object Shift2 {
-    val SRLI  = 0.U(2.W)
-    val SRAI  = 1.U(2.W)
-    val SRL   = 2.U(2.W)
-    val SRA   = 3.U(2.W)
-}
-
-import Funct3._
-import Shift2._
+import Operation._
 
 class AluIO(xlen: Int) extends Bundle {
     val inst = Input(UInt(xlen.W))
@@ -45,7 +45,8 @@ class AluSimple(val m: Int, val xlen: Int) extends Alu {
     val funct3 = io.inst(14, 12)
     val opcode = io.inst(6, 0)
 
-    val opcode2 = Cat(io.inst(5), io.inst(30))
+    val operation = Cat(funct3, opcode(5))
+    val oper_ext = io.inst(30)
 
     // Sign-extend the immediate value
     val extended_sign = Fill(xlen - 12, imm12(11))
@@ -66,61 +67,24 @@ class AluSimple(val m: Int, val xlen: Int) extends Alu {
     val and: UInt => UInt = a => io.rs1Data & a
 
     io.rdData := MuxLookup(
-        funct3,
+        operation,
         io.rs1Data,
         Seq(
-            ADD -> (MuxCase(
-                add(imm_xlen_s), 
-                Seq(
-                    (opcode2 === 2.U(2.W)) -> add(io.rs2Data),
-                    (opcode2 === 3.U(2.W)) -> add(-io.rs2Data),
-            ))),
-            SLL -> (MuxCase(
-                sll(shamt),
-                Seq(
-                    (opcode2 === 2.U(2.W)) -> sll(io.rs2Data(5, 0)),
-                )
-            )),
-            SLT -> (MuxCase(
-                slt(imm_xlen_s),
-                Seq(
-                    (opcode2 === 2.U(2.W)) -> slt(io.rs2Data),
-                )
-            )),
-            SLTU -> (MuxCase(
-                sltu(imm_xlen_s),
-                Seq(
-                    (opcode2 === 2.U(2.W)) -> sltu(io.rs2Data),
-                )
-            )),
-            XOR -> (MuxCase(
-                xor(imm_xlen_s),
-                Seq(
-                    (opcode2 === 2.U(2.W)) -> xor(io.rs2Data),
-                )
-            )),
-            SR -> (MuxLookup(
-                opcode2,
-                io.rs1Data,
-                Seq(
-                    SRLI -> srl(shamt),
-                    SRAI -> sra(shamt),
-                    SRL -> srl(io.rs2Data(4,0)),
-                    SRA -> sra(io.rs2Data(4,0)),
-                )
-            )),
-            OR -> (MuxCase(
-                or(imm_xlen_s),
-                Seq(
-                    (opcode2 === 2.U(2.W)) -> or(io.rs2Data),
-                )
-            )),
-            AND -> (MuxCase(
-                and(imm_xlen_s),
-                Seq(
-                    (opcode2 === 2.U(2.W)) -> and(io.rs2Data),
-                )
-            )),
+            ADDI -> add(imm_xlen_s),
+            ADD -> Mux(oper_ext === 0.B, add(io.rs2Data), add(-io.rs2Data)),
+            SLLI -> sll(imm_xlen_s(4, 0)),
+            SLTI -> slt(imm_xlen_s),
+            SLT -> slt(io.rs2Data),
+            SLTIU -> sltu(imm_xlen_u),
+            SLTU -> sltu(io.rs2Data),
+            XORI -> xor(imm_xlen_s),
+            XOR -> xor(io.rs2Data),
+            SRI -> Mux(oper_ext === 0.B, srl(shamt), sra(shamt)),
+            SR -> Mux(oper_ext === 0.B, srl(io.rs2Data(4, 0)), sra(io.rs2Data(4, 0))),
+            ORI -> or(imm_xlen_s),
+            OR -> or(io.rs2Data),
+            ANDI -> and(imm_xlen_s),
+            AND -> and(io.rs2Data),
         )
     )
 }
