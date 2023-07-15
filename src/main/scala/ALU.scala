@@ -49,12 +49,7 @@ class AluSimple(val m: Int, val xlen: Int) extends Alu {
     val oper_ext = io.inst(30)
 
     // Sign-extend the immediate value
-    val extended_sign = Fill(xlen - 12, imm12(11))
-    val imm_xlen_s = Cat(extended_sign, imm12)
-
-    // Just pad the immediate value
-    val ext_xlen_u = 0.U((xlen - 12).W)
-    val imm_xlen_u = Cat(ext_xlen_u, imm12)
+    val imm_xlen_s = Cat(Fill(xlen - 12, imm12(11)), imm12)
 
     val add: UInt => UInt = a => io.rs1Data + a
     val sll: UInt => UInt = a => io.rs1Data << a(4, 0)
@@ -76,7 +71,7 @@ class AluSimple(val m: Int, val xlen: Int) extends Alu {
             SLL -> sll(io.rs2Data),
             SLTI -> slt(imm_xlen_s),
             SLT -> slt(io.rs2Data),
-            SLTIU -> sltu(imm_xlen_u),
+            SLTIU -> sltu(imm_xlen_s),
             SLTU -> sltu(io.rs2Data),
             XORI -> xor(imm_xlen_s),
             XOR -> xor(io.rs2Data),
