@@ -1,14 +1,6 @@
 import chisel3._
 import chisel3.util.log2Ceil
 
-// Problem:
-//
-// Implement a register file of {m} registers of {n}-bit words.
-// The register with address 0 must always return 0 (and writing 
-// to it should not yield any effect whatsoever). All registers
-// must be initialised to 0 upon reset.
-//
-
 class RegFileIO(m: Int, xlen: Int) extends Bundle {
     def addrWidth = log2Ceil(m)
     val wen     = Input(Bool())
@@ -29,15 +21,15 @@ trait RegFile extends Module {
 class SimpleRegFile(val m: Int, val xlen: Int) extends RegFile {
     val io = IO(new RegFileIO(m, xlen))
 
-    // Instantiate the register file and initialise all to 0
-    val regs = RegInit(VecInit(Seq.fill(m)(0.U(xlen.W))))
+    // Instantiate the register file
+    val regs = Mem(m, UInt(xlen.W))
 
     // Output the appropriate registers
-    io.rdData1 := regs(io.rdAddr1)
-    io.rdData2 := regs(io.rdAddr2)
+    io.rdData1 := Mux(io.rdAddr1.orR, regs(io.rdAddr1), 0.U)
+    io.rdData2 := Mux(io.rdAddr2.orR, regs(io.rdAddr2), 0.U)
 
     // Write new value to register except for Register 0
-    when (io.wen && (io.wrAddr =/= 0.U)) {
+    when (io.wen & io.wrAddr.orR) {
         regs(io.wrAddr) := io.wrData
     }
 }
