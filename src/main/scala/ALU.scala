@@ -57,12 +57,12 @@ class AluSimple(val m: Int, val xlen: Int) extends Alu {
     val imm_xlen_u = Cat(ext_xlen_u, imm12)
 
     val add: UInt => UInt = a => io.rs1Data + a
-    val sll: UInt => UInt = a => io.rs1Data << a
+    val sll: UInt => UInt = a => io.rs1Data << a(4, 0)
     val slt: UInt => UInt = a => Mux(io.rs1Data.asSInt < a.asSInt, 1.U, 0.U)
     val sltu: UInt => UInt = a => Mux(io.rs1Data < a, 1.U, 0.U)
     val xor: UInt => UInt = a => io.rs1Data ^ a
-    val srl: UInt => UInt = a => io.rs1Data >> a
-    val sra: UInt => UInt = a => (io.rs1Data.asSInt >> a).asUInt
+    val srl: UInt => UInt = a => io.rs1Data >> a(4, 0)
+    val sra: UInt => UInt = a => (io.rs1Data.asSInt >> a(4, 0)).asUInt
     val or: UInt => UInt = a => io.rs1Data | a
     val and: UInt => UInt = a => io.rs1Data & a
 
@@ -72,8 +72,8 @@ class AluSimple(val m: Int, val xlen: Int) extends Alu {
         Seq(
             ADDI -> add(imm_xlen_s),
             ADD -> Mux(oper_ext === 0.B, add(io.rs2Data), add(-io.rs2Data)),
-            SLLI -> sll(imm_xlen_s(4, 0)),
-            SLL -> sll(io.rs2Data(4, 0)),
+            SLLI -> sll(imm_xlen_s),
+            SLL -> sll(io.rs2Data),
             SLTI -> slt(imm_xlen_s),
             SLT -> slt(io.rs2Data),
             SLTIU -> sltu(imm_xlen_u),
@@ -81,7 +81,7 @@ class AluSimple(val m: Int, val xlen: Int) extends Alu {
             XORI -> xor(imm_xlen_s),
             XOR -> xor(io.rs2Data),
             SRI -> Mux(oper_ext === 0.B, srl(shamt), sra(shamt)),
-            SR -> Mux(oper_ext === 0.B, srl(io.rs2Data(4, 0)), sra(io.rs2Data(4, 0))),
+            SR -> Mux(oper_ext === 0.B, srl(io.rs2Data), sra(io.rs2Data)),
             ORI -> or(imm_xlen_s),
             OR -> or(io.rs2Data),
             ANDI -> and(imm_xlen_s),
