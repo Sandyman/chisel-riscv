@@ -72,7 +72,7 @@ class AluSimple(val m: Int, val xlen: Int) extends Alu {
         Seq(
             ADDI -> add(imm_xlen_s),
             ADD -> Mux(oper_ext === 0.B, add(io.rs2Data), add(-io.rs2Data)),
-            SLLI -> sll(imm_xlen_s),
+            SLLI -> sll(shamt),
             SLL -> sll(io.rs2Data),
             SLTI -> slt(imm_xlen_s),
             SLT -> slt(io.rs2Data),
