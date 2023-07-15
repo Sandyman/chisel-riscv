@@ -90,14 +90,44 @@ class BasicALUSUBTest extends AnyFlatSpec with ChiselScalatestTester {
         }
     }    
 }
-//
-// TODO: SLLI test
-//
-
-//
-// TODO: SLL test
-//
-
+class BasicALUSLLITest extends AnyFlatSpec with ChiselScalatestTester {
+    val m = 32 // Number of registers
+    val xlen = 32 // Width of register in bits
+    it should "double value when shifted to left by 1" in {
+        test(new AluSimple(m, xlen)) { r =>
+            r.io.inst.poke("b0000_0000_0001_0000_0001_0000_0001_0011".U)
+            r.io.rs1Data.poke(13)
+            r.io.rdData.expect(26)
+        }
+    }
+    it should "become zero when shift too far" in {
+        test(new AluSimple(m, xlen)) { r =>
+            r.io.inst.poke("b0000_0001_1111_0000_0001_0000_0001_0011".U)
+            r.io.rs1Data.poke(12)
+            r.io.rdData.expect(0)
+        }
+    }
+}
+class BasicALUSLLTest extends AnyFlatSpec with ChiselScalatestTester {
+    val m = 32 // Number of registers
+    val xlen = 32 // Width of register in bits
+    it should "double value when shifted to left by 1" in {
+        test(new AluSimple(m, xlen)) { r =>
+            r.io.inst.poke("b0000_0000_0000_0000_0001_0000_0011_0011".U)
+            r.io.rs1Data.poke(13)
+            r.io.rs2Data.poke(1)
+            r.io.rdData.expect(26)
+        }
+    }
+    it should "become zero when shift too far" in {
+        test(new AluSimple(m, xlen)) { r =>
+            r.io.inst.poke("b0000_0000_0000_0000_0001_0000_0011_0011".U)
+            r.io.rs1Data.poke(12)
+            r.io.rs2Data.poke(31)
+            r.io.rdData.expect(0)
+        }
+    }
+}
 class BasicALUSLTITest extends AnyFlatSpec with ChiselScalatestTester {
     val m = 32 // Number of registers
     val xlen = 32 // Width of register in bits
