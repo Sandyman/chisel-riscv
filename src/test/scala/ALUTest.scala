@@ -88,7 +88,15 @@ class BasicALUSUBTest extends AnyFlatSpec with ChiselScalatestTester {
             r.io.rs2Data.poke(13)
             r.io.rdData.expect("hffff_ffff".U)
         }
-    }    
+    }
+    it should "negate any value when subtracted from 0" in {
+        test(new AluSimple(m, xlen)) { r =>
+            r.io.inst.poke("b0100_0000_0000_0000_0000_0000_0011_0011".U)
+            r.io.rs1Data.poke(0)
+            r.io.rs2Data.poke(13)
+            r.io.rdData.expect("hffff_fff3".U)
+        }
+    }
 }
 class BasicALUSLLITest extends AnyFlatSpec with ChiselScalatestTester {
     val m = 32 // Number of registers
@@ -244,6 +252,7 @@ class BasicALUXORITest extends AnyFlatSpec with ChiselScalatestTester {
             r.io.rs1Data.poke("haaaa_aaaa".U)
             r.io.rdData.expect(0x5555_5555)
 
+            // This test performs the NOT operation
             r.io.rs1Data.poke("hffff_ffff".U)
             r.io.rdData.expect(0)
         }
