@@ -2,44 +2,14 @@ import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
+import Operation._
+
 class BasicALUADDITest extends AnyFlatSpec with ChiselScalatestTester {
     val m = 32 // Number of registers
     val xlen = 32 // Width of register in bits
     it should "add positive immediate to register" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0001_0000_0000_0000_0001_0011".U)
-            r.io.rs1Data.poke(0)
-            r.io.rdData.expect(1)
-        }
-    }
-    it should "add negative immediate to register" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b1111_1111_1111_0000_0000_0000_0001_0011".U)
-            r.io.rs1Data.poke(1)
-            r.io.rdData.expect(0)
-        }
-    }
-    it should "return negative number when added to 0" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b1111_1111_1110_0000_0000_0000_0001_0011".U)
-            r.io.rs1Data.poke(0)
-            r.io.rdData.expect("hfffffffe".U)
-        }
-    }
-    it should "allow adding a positive number to a negative number" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_1111_0000_0000_0000_0001_0011".U)
-            r.io.rs1Data.poke("hfffffffe".U)
-            r.io.rdData.expect(13)
-        }
-    }
-}
-class BasicALUADDTest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "add positive immediate to register" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0000_0000_0011_0011".U)
+            r.io.oper.poke(ADD)
             r.io.rs1Data.poke(0)
             r.io.rs2Data.poke(1)
             r.io.rdData.expect(1)
@@ -47,7 +17,7 @@ class BasicALUADDTest extends AnyFlatSpec with ChiselScalatestTester {
     }
     it should "add negative immediate to register" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0000_0000_0011_0011".U)
+            r.io.oper.poke(ADD)
             r.io.rs1Data.poke(1)
             r.io.rs2Data.poke("hffff_ffff".U)
             r.io.rdData.expect(0)
@@ -55,7 +25,7 @@ class BasicALUADDTest extends AnyFlatSpec with ChiselScalatestTester {
     }
     it should "return negative number when added to 0" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0000_0000_0011_0011".U)
+            r.io.oper.poke(ADD)
             r.io.rs1Data.poke(0)
             r.io.rs2Data.poke("hffff_fffe".U)
             r.io.rdData.expect("hffff_fffe".U)
@@ -63,7 +33,7 @@ class BasicALUADDTest extends AnyFlatSpec with ChiselScalatestTester {
     }
     it should "allow adding a positive number to a negative number" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0000_0000_0011_0011".U)
+            r.io.oper.poke(ADD)
             r.io.rs1Data.poke("hffff_fffe".U)
             r.io.rs2Data.poke(15)
             r.io.rdData.expect(13)
@@ -75,7 +45,7 @@ class BasicALUSUBTest extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32 // Width of register in bits
     it should "subtract numbers" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0100_0000_0000_0000_0000_0000_0011_0011".U)
+            r.io.oper.poke(SUB)
             r.io.rs1Data.poke(13)
             r.io.rs2Data.poke(12)
             r.io.rdData.expect(1)
@@ -83,7 +53,7 @@ class BasicALUSUBTest extends AnyFlatSpec with ChiselScalatestTester {
     }
     it should "subtract numbers and yield negative result" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0100_0000_0000_0000_0000_0000_0011_0011".U)
+            r.io.oper.poke(SUB)
             r.io.rs1Data.poke(12)
             r.io.rs2Data.poke(13)
             r.io.rdData.expect("hffff_ffff".U)
@@ -91,28 +61,10 @@ class BasicALUSUBTest extends AnyFlatSpec with ChiselScalatestTester {
     }
     it should "negate any value when subtracted from 0" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0100_0000_0000_0000_0000_0000_0011_0011".U)
+            r.io.oper.poke(SUB)
             r.io.rs1Data.poke(0)
             r.io.rs2Data.poke(13)
             r.io.rdData.expect("hffff_fff3".U)
-        }
-    }
-}
-class BasicALUSLLITest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "double value when shifted to left by 1" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0001_0000_0001_0000_0001_0011".U)
-            r.io.rs1Data.poke(13)
-            r.io.rdData.expect(26)
-        }
-    }
-    it should "become zero when shift too far" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0001_1111_0000_0001_0000_0001_0011".U)
-            r.io.rs1Data.poke(12)
-            r.io.rdData.expect(0)
         }
     }
 }
@@ -121,7 +73,7 @@ class BasicALUSLLTest extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32 // Width of register in bits
     it should "double value when shifted to left by 1" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0001_0000_0011_0011".U)
+            r.io.oper.poke(SLL)
             r.io.rs1Data.poke(13)
             r.io.rs2Data.poke(1)
             r.io.rdData.expect(26)
@@ -129,39 +81,9 @@ class BasicALUSLLTest extends AnyFlatSpec with ChiselScalatestTester {
     }
     it should "become zero when shift too far" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0001_0000_0011_0011".U)
+            r.io.oper.poke(SLL)
             r.io.rs1Data.poke(12)
             r.io.rs2Data.poke(31)
-            r.io.rdData.expect(0)
-        }
-    }
-}
-class BasicALUSLTITest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "compare positive numbers" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_1111_0000_0010_0000_0001_0011".U)
-            r.io.rs1Data.poke(13)
-            r.io.rdData.expect(1)
-
-            r.io.rs1Data.poke(27)
-            r.io.rdData.expect(0)
-
-            r.io.inst.poke("b0000_0001_1011_0000_0010_0000_0001_0011".U)
-            r.io.rdData.expect(0)
-        }
-    }
-    it should "compare negative numbers" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b1111_1111_1110_0000_0010_0000_0001_0011".U)
-            r.io.rs1Data.poke("hfffffffd".U)
-            r.io.rdData.expect(1)
-
-            r.io.rs1Data.poke("hffffffff".U)
-            r.io.rdData.expect(0)
-
-            r.io.inst.poke("b1111_1111_1111_0000_0010_0000_0001_0011".U)
             r.io.rdData.expect(0)
         }
     }
@@ -171,7 +93,7 @@ class BasicALUSLTTest extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32 // Width of register in bits
     it should "compare positive numbers" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0010_0000_0011_0011".U)
+            r.io.oper.poke(SLT)
             r.io.rs1Data.poke(13)
             r.io.rs2Data.poke(15)
             r.io.rdData.expect(1)
@@ -179,44 +101,26 @@ class BasicALUSLTTest extends AnyFlatSpec with ChiselScalatestTester {
             r.io.rs1Data.poke(27)
             r.io.rdData.expect(0)
 
-            r.io.inst.poke("b0000_0000_0000_0000_0010_0000_0011_0011".U)
             r.io.rs2Data.poke(27)
             r.io.rdData.expect(0)
         }
     }
     it should "compare negative numbers" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0010_0000_0011_0011".U)
+            r.io.oper.poke(SLT)
+
+            // -3 < -2 => True
             r.io.rs1Data.poke("hffff_fffd".U)
             r.io.rs2Data.poke("hffff_fffe".U)
             r.io.rdData.expect(1)
 
+            // -2 < -1 => False
             r.io.rs1Data.poke("hffff_ffff".U)
             r.io.rdData.expect(0)
 
-            r.io.inst.poke("b0000_0000_0000_0000_0010_0000_0011_0011".U)
-            r.io.rdData.expect(0)
-        }
-    }
-}
-class BasicALUSLTIUTest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "compare positive numbers" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_1111_0000_0011_0000_0001_0011".U)
-            r.io.rs1Data.poke(13)
+            // -1 < 0 => True
+            r.io.rs2Data.poke(0)
             r.io.rdData.expect(1)
-
-            r.io.rs1Data.poke(27)
-            r.io.rdData.expect(0)
-
-            r.io.inst.poke("b0000_0001_1011_0000_0011_0000_0001_0011".U)
-            r.io.rdData.expect(0)
-
-            r.io.inst.poke("b1111_1111_1110_0000_0011_0000_0001_0011".U)
-            r.io.rs1Data.poke("hffffffff".U)
-            r.io.rdData.expect(0)
         }
     }
 }
@@ -225,34 +129,22 @@ class BasicALUSLTUTest extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32 // Width of register in bits
     it should "compare positive numbers" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0011_0000_0011_0011".U)
+            r.io.oper.poke(SLTU)
+
+            // 13 < 15 => True
             r.io.rs1Data.poke(13)
             r.io.rs2Data.poke(15)
             r.io.rdData.expect(1)
 
+            // 27 < 15 => False
             r.io.rs1Data.poke(27)
             r.io.rdData.expect(0)
 
-            r.io.inst.poke("b0000_0000_0000_0000_0011_0000_0011_0011".U)
+            // 27 < 27 => False
             r.io.rs2Data.poke(27)
             r.io.rdData.expect(0)
 
-            r.io.inst.poke("b0000_0000_0000_0000_0011_0000_0011_0011".U)
-            r.io.rs1Data.poke("hffff_ffff".U)
-            r.io.rdData.expect(0)
-        }
-    }
-}
-class BasicALUXORITest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "do XORI correctly" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b1111_1111_1111_0000_0100_0000_0001_0011".U)
-            r.io.rs1Data.poke("haaaa_aaaa".U)
-            r.io.rdData.expect(0x5555_5555)
-
-            // This test performs the NOT operation
+            // (2^32 - 1) < 27 => False
             r.io.rs1Data.poke("hffff_ffff".U)
             r.io.rdData.expect(0)
         }
@@ -263,69 +155,16 @@ class BasicALUXORTest extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32 // Width of register in bits
     it should "do XOR correctly" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0100_0000_0011_0011".U)
+            r.io.oper.poke(XOR)
+
+            // 0xaa ^ 0xff => 0x55
             r.io.rs1Data.poke("haaaa_aaaa".U)
             r.io.rs2Data.poke("hffff_ffff".U)
             r.io.rdData.expect(0x5555_5555)
 
+            // 0xff ^ 0xff => 0x00
             r.io.rs1Data.poke("hffff_ffff".U)
             r.io.rdData.expect(0)
-        }
-    }
-}
-class BasicALUSRLITest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "double value when shifted to left by 1" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0001_0000_0101_0000_0001_0011".U)
-            r.io.rs1Data.poke(26)
-            r.io.rdData.expect(13)
-
-            r.io.rs1Data.poke(15)
-            r.io.rdData.expect(7)
-        }
-    }
-    it should "become zero when shifted too far" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0101_0000_0101_0000_0001_0011".U)
-            r.io.rs1Data.poke(12)
-            r.io.rdData.expect(0)
-        }
-    }
-    it should "not sign extend" in {
-        test(new AluSimple(m, xlen)) { r=>
-            r.io.inst.poke("b0000_0000_0100_0000_0101_0000_0001_0011".U)
-            r.io.rs1Data.poke("hf842_8421".U)
-            r.io.rdData.expect("h0f84_2842".U)
-        }
-    }
-}
-class BasicALUSRAITest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "half value when shifted to right by 1" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0100_0000_0001_0000_0101_0000_0001_0011".U)
-            r.io.rs1Data.poke(26)
-            r.io.rdData.expect(13)
-
-            r.io.rs1Data.poke(15)
-            r.io.rdData.expect(7)
-        }
-    }
-    it should "become zero when shifted too far" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0100_0000_0101_0000_0101_0000_0001_0011".U)
-            r.io.rs1Data.poke(12)
-            r.io.rdData.expect(0)
-        }
-    }
-    it should "sign extend" in {
-        test(new AluSimple(m, xlen)) { r=>
-            r.io.inst.poke("b0100_0000_0100_0000_0101_0000_0001_0011".U)
-            r.io.rs1Data.poke("hf842_8421".U)
-            r.io.rdData.expect("hff84_2842".U)
         }
     }
 }
@@ -334,7 +173,7 @@ class BasicALUSRLTest extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32 // Width of register in bits
     it should "half value when shifted to right by 1" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0101_0000_0011_0011".U)
+            r.io.oper.poke(SRL)
             r.io.rs1Data.poke(26)
             r.io.rs2Data.poke(1)
             r.io.rdData.expect(13)
@@ -342,7 +181,7 @@ class BasicALUSRLTest extends AnyFlatSpec with ChiselScalatestTester {
     }
     it should "become zero when shifted too far" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0101_0000_0011_0011".U)
+            r.io.oper.poke(SRL)
             r.io.rs1Data.poke(12)
             r.io.rs2Data.poke(5)
             r.io.rdData.expect(0)
@@ -350,7 +189,7 @@ class BasicALUSRLTest extends AnyFlatSpec with ChiselScalatestTester {
     }
     it should "not sign extend" in {
         test(new AluSimple(m, xlen)) { r=>
-            r.io.inst.poke("b0000_0000_0000_0000_0101_0000_0011_0011".U)
+            r.io.oper.poke(SRL)
             r.io.rs1Data.poke("hf842_8421".U)
             r.io.rs2Data.poke(4)
             r.io.rdData.expect("h0f84_2842".U)
@@ -362,7 +201,7 @@ class BasicALUSRATest extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32 // Width of register in bits
     it should "half value when shifted to right by 1" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0100_0000_0000_0000_0101_0000_0011_0011".U)
+            r.io.oper.poke(SRA)
             r.io.rs1Data.poke(26)
             r.io.rs2Data.poke(1)
             r.io.rdData.expect(13)
@@ -370,33 +209,18 @@ class BasicALUSRATest extends AnyFlatSpec with ChiselScalatestTester {
     }
     it should "become zero when shifted too far" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0100_0000_0000_0000_0101_0000_0011_0011".U)
+            r.io.oper.poke(SRA)
             r.io.rs1Data.poke(12)
             r.io.rs2Data.poke(5)
             r.io.rdData.expect(0)
         }
     }
-    it should "sign extend" in {
+    it should "sign extend a negative number" in {
         test(new AluSimple(m, xlen)) { r=>
-            r.io.inst.poke("b0100_0000_0000_0000_0101_0000_0011_0011".U)
+            r.io.oper.poke(SRA)
             r.io.rs1Data.poke("hf842_8421".U)
             r.io.rs2Data.poke(4)
             r.io.rdData.expect("hff84_2842".U)
-        }
-    }
-}
-class BasicALUORITest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "do ORI correctly" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b1111_1111_1111_0000_0110_0000_0001_0011".U)
-            r.io.rs1Data.poke("haaaa_aaaa".U)
-            r.io.rdData.expect("hffff_ffff".U)
-
-            r.io.inst.poke("b0101_0101_0101_0000_0110_0000_0001_0011".U)
-            r.io.rs1Data.poke("h0105_0a0a".U)
-            r.io.rdData.expect(0x0105_0f5f)
         }
     }
 }
@@ -405,30 +229,17 @@ class BasicALUORTest extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32 // Width of register in bits
     it should "do OR correctly" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b1111_1111_1111_0000_0110_0000_0011_0011".U)
+            r.io.oper.poke(OR)
+
+            // 0xaa | 0xff => 0xff
             r.io.rs1Data.poke("haaaa_aaaa".U)
             r.io.rs2Data.poke("hffff_ffff".U)
             r.io.rdData.expect("hffff_ffff".U)
 
-            r.io.inst.poke("b0101_0101_0101_0000_0110_0000_0011_0011".U)
+            // 0x0105_0a0a | 0x0000_0555 => 0x0105_0f5f
             r.io.rs1Data.poke("h0105_0a0a".U)
             r.io.rs2Data.poke("h0000_0555".U)
-            r.io.rdData.expect(0x01050f5f)
-        }
-    }
-}
-class BasicALUANDITest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "do ANDI correctly" in {
-        test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b1111_1111_1111_0000_0111_0000_0001_0011".U)
-            r.io.rs1Data.poke("haaaaaaaa".U)
-            r.io.rdData.expect("haaaaaaaa".U)
-
-            r.io.inst.poke("b0101_0101_0101_0000_0111_0000_0001_0011".U)
-            r.io.rs1Data.poke("h01050faf".U)
-            r.io.rdData.expect(0x0000_0505)
+            r.io.rdData.expect(0x0105_0f5f)
         }
     }
 }
@@ -437,12 +248,14 @@ class BasicALUANDTest extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32 // Width of register in bits
     it should "do AND correctly" in {
         test(new AluSimple(m, xlen)) { r =>
-            r.io.inst.poke("b0000_0000_0000_0000_0111_0000_0011_0011".U)
+            r.io.oper.poke(AND)
+
+            // 0xaa & 0xff => 0xaa
             r.io.rs1Data.poke("haaaa_aaaa".U)
             r.io.rs2Data.poke("hffff_ffff".U)
             r.io.rdData.expect("haaaa_aaaa".U)
 
-            r.io.inst.poke("b0000_0000_0000_0000_0111_0000_0011_0011".U)
+            // 0x0105_0faf & 0x0000_0555 => 0x0000_0505
             r.io.rs1Data.poke("h0105_0faf".U)
             r.io.rs2Data.poke("h0000_0555".U)
             r.io.rdData.expect(0x0000_0505)
