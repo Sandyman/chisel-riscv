@@ -196,3 +196,60 @@ class BasicUImmGenTest extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
 }
+class BasicJImmGenTest extends AnyFlatSpec with ChiselScalatestTester {
+    val m = 32 // Number of registers
+    val xlen = 32 // Width of register in bits
+    it should "(J-type) create a 0 from 0" in {
+        test(new ImmGenSimple(xlen)) { r =>
+            r.io.sel.poke(JImm)
+
+            // value 0
+            r.io.inst.poke(0.U)
+            r.io.imm.expect(0.U)
+        }
+    }
+    it should "(J-type) not be changed by non-immediate bits" in {
+        test(new ImmGenSimple(xlen)) { r =>
+            r.io.sel.poke(JImm)
+
+            // value 0
+            r.io.inst.poke((1 << 12) - 1)
+            r.io.imm.expect(0.U)
+        }
+    }
+    it should "(J-type) create a small positive value" in {
+        test(new ImmGenSimple(xlen)) { r =>
+            r.io.sel.poke(JImm)
+
+            // value 1 (doubled)
+            r.io.inst.poke(1 << 21)
+            r.io.imm.expect(2.U)
+        }
+    }
+    it should "(J-type) create the biggest positive value" in {
+        test(new ImmGenSimple(xlen)) { r =>
+            r.io.sel.poke(JImm)
+
+            // value 1 (doubled)
+            r.io.inst.poke(0x7fff_f000)
+            r.io.imm.expect(0x7ffff << 1)
+        }
+    }
+    it should "(J-type) create a small negative value" in {
+        test(new ImmGenSimple(xlen)) { r =>
+            r.io.sel.poke(JImm)
+
+            // value -1 (doubled)
+            r.io.inst.poke("hffff_f000".U)
+            r.io.imm.expect("hffff_fffe".U)
+        }
+    }
+    it should "(J-type) create the biggest negative value" in {
+        test(new ImmGenSimple(xlen)) { r =>
+            r.io.sel.poke(JImm)
+
+            r.io.inst.poke("h8000_0000".U)
+            r.io.imm.expect("hfff0_0000".U)
+        }
+    }
+}
