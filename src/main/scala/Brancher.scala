@@ -5,10 +5,10 @@ import chisel3.experimental._
 object BranchType {
     val EQ     = 0.U(3.W)
     val NE     = 1.U(3.W)
-    val LTU    = 2.U(3.W)
-    val LT     = 3.U(3.W)
-    val GEU    = 4.U(3.W)
+    val LT     = 4.U(3.W)
     val GE     = 5.U(3.W)
+    val LTU    = 6.U(3.W)
+    val GEU    = 7.U(3.W)
 }
 
 import BranchType._
