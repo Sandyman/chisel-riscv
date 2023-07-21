@@ -25,12 +25,11 @@ class AluIO(xlen: Int) extends Bundle {
 }
 
 trait Alu extends Module {
-    def m: Int
     def xlen: Int
     val io: AluIO
 }
 
-class AluSimple(val m: Int, val xlen: Int) extends Alu {
+class AluSimple(val xlen: Int) extends Alu {
     val io = IO(new AluIO(xlen))
 
     val add: UInt => UInt = a => io.rs1Data + a
