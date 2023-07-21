@@ -26,21 +26,21 @@ trait ImmGen extends Module {
 class ImmGenSimple (val xlen: Int) extends ImmGen {
     val io = IO(new ImmGenIO(xlen))
 
-    val imm_i: UInt => UInt = a => Cat(Fill(21, a(31)), a(30, 20))
-    val imm_s: UInt => UInt = a => Cat(Fill(21, a(31)), a(30, 25), a(11, 7))
-    val imm_b: UInt => UInt = a => Cat(Fill(20, a(31)), a(7), a(30, 25), a(11, 8), 0.B)
-    val imm_u: UInt => UInt = a => Cat(a(31, 12), Fill(12, 0.B))
-    val imm_j: UInt => UInt = a => Cat(Fill(12, a(31)), a(19, 12), a(20), a(30, 21), 0.B) 
+    val imm_i = Cat(Fill(21, io.inst(31)), io.inst(30, 20))
+    val imm_s = Cat(Fill(21, io.inst(31)), io.inst(30, 25), io.inst(11, 7))
+    val imm_b = Cat(Fill(20, io.inst(31)), io.inst(7), io.inst(30, 25), io.inst(11, 8), 0.B)
+    val imm_u = Cat(io.inst(31, 12), Fill(12, 0.B))
+    val imm_j = Cat(Fill(12, io.inst(31)), io.inst(19, 12), io.inst(20), io.inst(30, 21), 0.B)
 
     io.imm := MuxLookup(
-        0.U,
         io.sel,
+        0.U,
         Seq(
-            IImm -> imm_i(io.inst),
-            SImm -> imm_s(io.inst),
-            BImm -> imm_b(io.inst),
-            UImm -> imm_u(io.inst),
-            JImm -> imm_j(io.inst),
+            IImm -> imm_i,
+            SImm -> imm_s,
+            BImm -> imm_b,
+            UImm -> imm_u,
+            JImm -> imm_j,
         )
     )
 }
