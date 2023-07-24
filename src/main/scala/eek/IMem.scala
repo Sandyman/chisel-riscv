@@ -18,8 +18,8 @@ trait IMem extends Module {
 class SimpleInstructionMemory(val s: Int, val xlen: Int) extends IMem {
     val io = IO(new IMemIO(xlen))
 
-    // Create the instruction memory, fill with NOP instructions
-    val instMem = VecInit(Seq.fill(s)(0x33.U(xlen.W)))              // Initialise with NOP
+    // Create the instruction memory, initialise with NOP instructions
+    val instMem = VecInit(Seq.fill(s)(0x33.U(xlen.W)))
 
     // Add a few "useful" instructions so we can test
 
