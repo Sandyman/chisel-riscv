@@ -14,14 +14,14 @@ class IImmGenTester(immgen: => ImmGen, count: => Int, sel: => UInt) extends Basi
 
     val rnd = new scala.util.Random
 
+    assert(count > 0, "Count must be at least 1.")
+
     val (cntr, done) = Counter(true.B, count)
 
     // Create a bunch of random values starting with 0
-    val initialSequence = Seq(0)
-    val randomNumbers = Seq.fill(count)(rnd.nextInt())
-    val finalSequence = initialSequence ++ randomNumbers
+    val randomInstructions = Seq(0) ++ Seq.fill(count - 1)(rnd.nextInt())
 
-    val i = VecInit(finalSequence.map(x => (x.asSInt).asUInt))
+    val i = VecInit(randomInstructions.map(x => (x.asSInt).asUInt))
 
     def imm_i(x: UInt) = { Cat(Fill(21, x(31)), x(30, 20)) }
     def imm_u(x: UInt) = { Cat(x(31, 12), Fill(12, 0.B)) }
