@@ -21,17 +21,18 @@ class IImmGenTester(immgen: => ImmGen, count: => Int) extends BasicTester {
     val randomNumbers = Seq.fill(count)(rnd.nextInt())
     val finalSequence = initialSequence ++ randomNumbers
 
-    def imm_i(x: Int) = { (x.asSInt).asUInt }
+    val i = VecInit(finalSequence.map(x => (x.asSInt).asUInt))
 
-    val i = VecInit(finalSequence.map(imm_i))(count)
+    def imm_i(x: UInt) = { Cat(Fill(21, x(31)), x(30, 20)) }
+
+    val out = imm_i(i(cntr))
 
     dut.io.sel := IImm
     dut.io.inst := i(cntr)
 
-    val out = ((i(cntr) & "hfff0_0000".U).asSInt >> 20).asUInt
-
     when(done) { stop() }
     assert(dut.io.imm === out)
+    printf("Counter: %d, i: 0x%x, Out: %x ?= %x\n", cntr, i(cntr), dut.io.imm, out)
 }
 
 class ImmGenTests extends AnyFlatSpec with ChiselScalatestTester {
