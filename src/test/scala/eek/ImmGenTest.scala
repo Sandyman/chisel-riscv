@@ -1,70 +1,47 @@
 package eek
 
 import chisel3._
+import chisel3.testers._
+import chisel3.util._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 import ImmType._
 
-class BasicIImmGenTest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "(I-Type) build UInt of value 0 from 12-bit 0 value" in {
-        test(new ImmGenSimple(xlen)) { r => 
-            r.io.sel.poke(IImm)
-            r.io.inst.poke(0 << 20)
-            r.io.imm.expect(0)
-        }
-    }
-    it should "(I-Type) build UInt from 12-bit a positive value" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(IImm)
-            r.io.inst.poke(12 << 20)
-            r.io.imm.expect(12)
-        }
-    }
-    it should "(I-Type) build UInt from the biggest positive value" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(IImm)
-            r.io.inst.poke(0x7ff << 20)
-            r.io.imm.expect(0x7ff)
-        }
-    }
-    it should "(I-Type) build UInt from a negative 12-bit value" in {
-        test(new ImmGenSimple(xlen)) { r => 
-            r.io.sel.poke(IImm)
+class IImmGenTester(immgen: => ImmGen, count: => Int) extends BasicTester {
+    val dut = Module(immgen)
+    val xlen = dut.xlen
 
-            // value -2048
-            r.io.inst.poke("h8000_0000".U)
-            r.io.imm.expect("hffff_f800".U)
-        }
-    }
-    it should "(I-Type) built UInt of value -1/-2 from 12-bit -1/-2 value" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(IImm)
-            // value -1
-            r.io.inst.poke("hfff0_0000".U)
-            r.io.imm.expect("hffff_ffff".U)
+    val rnd = new scala.util.Random
 
-            // value -2
-            r.io.inst.poke("hffe0_0000".U)
-            r.io.imm.expect("hffff_fffe".U)
-        }
-    }
-    it should "(I-Type) not be changed by non-immediate bits" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(IImm)
+    val (cntr, done) = Counter(true.B, count)
 
-            // set all other bits to 1
-            r.io.inst.poke((1 << 20) - 1)
-            r.io.imm.expect(0)
+    // Create a bunch of random values starting with 0
+    val initialSequence = Seq(0)
+    val randomNumbers = Seq.fill(count)(rnd.nextInt())
+    val finalSequence = initialSequence ++ randomNumbers
 
-            // value -2
-            r.io.inst.poke("hffef_ffff".U)
-            r.io.imm.expect("hffff_fffe".U)
-        }
-    }
+    def imm_i(x: Int) = { (x.asSInt).asUInt }
+
+    val i = VecInit(finalSequence.map(imm_i))(count)
+
+    dut.io.sel := IImm
+    dut.io.inst := i(cntr)
+
+    val out = ((i(cntr) & "hfff0_0000".U).asSInt >> 20).asUInt
+
+    when(done) { stop() }
+    assert(dut.io.imm === out)
 }
+
+class ImmGenTests extends AnyFlatSpec with ChiselScalatestTester {
+    val xlen = 32
+    val count = 50
+    "ImmGenSimple" should "pass" in {
+        test(new IImmGenTester(new ImmGenSimple(xlen), count)).runUntilStop()
+    }    
+}
+
 class BasicSImmGenTest extends AnyFlatSpec with ChiselScalatestTester {
     val m = 32 // Number of registers
     val xlen = 32 // Width of register in bits
