@@ -26,6 +26,7 @@ class IImmGenTester(immgen: => ImmGen, count: => Int, sel: => UInt) extends Basi
     def imm_i(x: UInt) = { Cat(Fill(21, x(31)), x(30, 20)) }
     def imm_u(x: UInt) = { Cat(x(31, 12), Fill(12, 0.B)) }
     def imm_s(x: UInt) = { Cat(Fill(21, x(31)), x(30, 25), x(11, 7)) }
+    def imm_b(x: UInt) = { Cat(Fill(20, x(31)), x(7), x(30, 25), x(11, 8), 0.B) }
 
     val out = MuxLookup(
         sel,
@@ -34,6 +35,7 @@ class IImmGenTester(immgen: => ImmGen, count: => Int, sel: => UInt) extends Basi
             IImm -> imm_i(i(cntr)),
             UImm -> imm_u(i(cntr)),
             SImm -> imm_s(i(cntr)),
+            BImm -> imm_b(i(cntr)),
         )
     )
 
@@ -57,54 +59,8 @@ class ImmGenTests extends AnyFlatSpec with ChiselScalatestTester {
     "S-type immediates" should "pass" in {
         test(new IImmGenTester(new ImmGenSimple(xlen), count, SImm)).runUntilStop()
     }
-}
-class BasicBImmGenTest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "(B-type) create a 0 from 0" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(BImm)
-
-            // value 0
-            r.io.inst.poke(0.U)
-            r.io.imm.expect(0.U)
-        }
-    }
-    it should "(B-type) create a positive UInt from a positive value" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(BImm)
-
-            // only bit 1 set => imm 2
-            r.io.inst.poke(1 << 8)
-            r.io.imm.expect(2)
-        }
-    }
-    it should "(B-type) create the biggest positive number" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(BImm)
-
-            // biggest positive value (doubled)
-            r.io.inst.poke(0x3f << 25 | 0x1f << 7)
-            r.io.imm.expect(((1 << 11) - 1) << 1)
-        }
-    }
-    it should "(B-type) create a small negative number" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(BImm)
-
-            // small negative value (doubled)
-            r.io.inst.poke("hfe00_0f80".U)
-            r.io.imm.expect("hffff_fffe".U)
-        }
-    }
-    it should "(B-type) create the biggest negative number" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(BImm)
-
-            // biggest negative number (doubled)
-            r.io.inst.poke("h8000_0000".U)
-            r.io.imm.expect("hffff_f000".U)
-        }
+    "B-type immediates" should "pass" in {
+        test(new IImmGenTester(new ImmGenSimple(xlen), count, BImm)).runUntilStop()
     }
 }
 class BasicJImmGenTest extends AnyFlatSpec with ChiselScalatestTester {
