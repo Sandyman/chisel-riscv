@@ -8,7 +8,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 import ImmType._
 
-class IImmGenTester(immgen: => ImmGen, count: => Int) extends BasicTester {
+class IImmGenTester(immgen: => ImmGen, count: => Int, sel: => UInt) extends BasicTester {
     val dut = Module(immgen)
     val xlen = dut.xlen
 
@@ -24,10 +24,20 @@ class IImmGenTester(immgen: => ImmGen, count: => Int) extends BasicTester {
     val i = VecInit(finalSequence.map(x => (x.asSInt).asUInt))
 
     def imm_i(x: UInt) = { Cat(Fill(21, x(31)), x(30, 20)) }
+    def imm_u(x: UInt) = { Cat(x(31, 12), Fill(12, 0.B)) }
+    def imm_s(x: UInt) = { Cat(Fill(21, x(31)), x(30, 25), x(11, 7)) }
 
-    val out = imm_i(i(cntr))
+    val out = MuxLookup(
+        sel,
+        imm_i(i(cntr)),
+        Seq(
+            IImm -> imm_i(i(cntr)),
+            UImm -> imm_u(i(cntr)),
+            SImm -> imm_s(i(cntr)),
+        )
+    )
 
-    dut.io.sel := IImm
+    dut.io.sel := sel
     dut.io.inst := i(cntr)
 
     when(done) { stop() }
@@ -38,40 +48,14 @@ class IImmGenTester(immgen: => ImmGen, count: => Int) extends BasicTester {
 class ImmGenTests extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32
     val count = 50
-    "ImmGenSimple" should "pass" in {
-        test(new IImmGenTester(new ImmGenSimple(xlen), count)).runUntilStop()
-    }    
-}
-
-class BasicSImmGenTest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "(S-type) build a positive UInt value from 12 bits" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(SImm)
-
-            // value 1
-            r.io.inst.poke(1 << 7)
-            r.io.imm.expect(1)
-        }
+    "I-type immediates" should "pass" in {
+        test(new IImmGenTester(new ImmGenSimple(xlen), count, IImm)).runUntilStop()
     }
-    it should "(S-type) sign-extend a 12-bit negative value into a UInt" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(SImm)
-
-            // value -1
-            r.io.inst.poke("hfe00_0f80".U)
-            r.io.imm.expect("hffff_ffff".U)
-        }
+    "U-type immediates" should "pass" in {
+        test(new IImmGenTester(new ImmGenSimple(xlen), count, UImm)).runUntilStop()
     }
-    it should "{S-type) create 0 from 0" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(SImm)
-
-            // value 0
-            r.io.inst.poke(0.U)
-            r.io.imm.expect(0.U)
-        }
+    "S-type immediates" should "pass" in {
+        test(new IImmGenTester(new ImmGenSimple(xlen), count, SImm)).runUntilStop()
     }
 }
 class BasicBImmGenTest extends AnyFlatSpec with ChiselScalatestTester {
@@ -119,59 +103,6 @@ class BasicBImmGenTest extends AnyFlatSpec with ChiselScalatestTester {
 
             // biggest negative number (doubled)
             r.io.inst.poke("h8000_0000".U)
-            r.io.imm.expect("hffff_f000".U)
-        }
-    }
-}
-class BasicUImmGenTest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "(U-type) create a 0 from 0" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(UImm)
-
-            // value 0
-            r.io.inst.poke(0.U)
-            r.io.imm.expect(0.U)
-        }
-    }
-    it should "(U-Type) create the smallest positive value" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(UImm)
-
-            r.io.inst.poke(1 << 12)
-            r.io.imm.expect(1 << 12)
-        }
-    }
-    it should "(U-Type) create the biggest positive value" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(UImm)
-
-            r.io.inst.poke("h7fff_f000".U)
-            r.io.imm.expect("h7fff_f000".U)
-        }
-    }
-    it should "(U-Type) create the smallest negative value" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(UImm)
-
-            r.io.inst.poke("hffff_f000".U)
-            r.io.imm.expect("hffff_f000".U)
-        }
-    }
-    it should "(U-Type) create the biggest negative value" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(UImm)
-
-            r.io.inst.poke("h8000_0000".U)
-            r.io.imm.expect("h8000_0000".U)
-        }
-    }
-    it should "(U-type) not be changed by non-immediate bits" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(UImm)
-
-            r.io.inst.poke("hffff_ffff".U)
             r.io.imm.expect("hffff_f000".U)
         }
     }
