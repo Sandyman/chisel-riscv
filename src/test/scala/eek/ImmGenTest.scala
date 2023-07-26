@@ -27,24 +27,28 @@ class IImmGenTester(immgen: => ImmGen, count: => Int, sel: => UInt) extends Basi
     def imm_u(x: UInt) = { Cat(x(31, 12), Fill(12, 0.B)) }
     def imm_s(x: UInt) = { Cat(Fill(21, x(31)), x(30, 25), x(11, 7)) }
     def imm_b(x: UInt) = { Cat(Fill(20, x(31)), x(7), x(30, 25), x(11, 8), 0.B) }
+    def imm_j(x: UInt) = { Cat(Fill(12, x(31)), x(19, 12), x(20), x(30, 21), 0.B) }
+
+    val inst = i(cntr)
 
     val out = MuxLookup(
         sel,
         imm_i(i(cntr)),
         Seq(
-            IImm -> imm_i(i(cntr)),
-            UImm -> imm_u(i(cntr)),
-            SImm -> imm_s(i(cntr)),
-            BImm -> imm_b(i(cntr)),
+            IImm -> imm_i(inst),
+            UImm -> imm_u(inst),
+            SImm -> imm_s(inst),
+            BImm -> imm_b(inst),
+            JImm -> imm_j(inst),
         )
     )
 
     dut.io.sel := sel
-    dut.io.inst := i(cntr)
+    dut.io.inst := inst
 
     when(done) { stop() }
     assert(dut.io.imm === out)
-    printf("Counter: %d, i: 0x%x, Out: %x ?= %x\n", cntr, i(cntr), dut.io.imm, out)
+    printf("Counter: %d, i: 0x%x, sel: %x, Out: %x ?= %x\n", cntr, inst, sel, dut.io.imm, out)
 }
 
 class ImmGenTests extends AnyFlatSpec with ChiselScalatestTester {
@@ -62,61 +66,7 @@ class ImmGenTests extends AnyFlatSpec with ChiselScalatestTester {
     "B-type immediates" should "pass" in {
         test(new IImmGenTester(new ImmGenSimple(xlen), count, BImm)).runUntilStop()
     }
-}
-class BasicJImmGenTest extends AnyFlatSpec with ChiselScalatestTester {
-    val m = 32 // Number of registers
-    val xlen = 32 // Width of register in bits
-    it should "(J-type) create a 0 from 0" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(JImm)
-
-            // value 0
-            r.io.inst.poke(0.U)
-            r.io.imm.expect(0.U)
-        }
-    }
-    it should "(J-type) not be changed by non-immediate bits" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(JImm)
-
-            // value 0
-            r.io.inst.poke((1 << 12) - 1)
-            r.io.imm.expect(0.U)
-        }
-    }
-    it should "(J-type) create a small positive value" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(JImm)
-
-            // value 1 (doubled)
-            r.io.inst.poke(1 << 21)
-            r.io.imm.expect(2.U)
-        }
-    }
-    it should "(J-type) create the biggest positive value" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(JImm)
-
-            // value 1 (doubled)
-            r.io.inst.poke(0x7fff_f000)
-            r.io.imm.expect(0x7ffff << 1)
-        }
-    }
-    it should "(J-type) create a small negative value" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(JImm)
-
-            // value -1 (doubled)
-            r.io.inst.poke("hffff_f000".U)
-            r.io.imm.expect("hffff_fffe".U)
-        }
-    }
-    it should "(J-type) create the biggest negative value" in {
-        test(new ImmGenSimple(xlen)) { r =>
-            r.io.sel.poke(JImm)
-
-            r.io.inst.poke("h8000_0000".U)
-            r.io.imm.expect("hfff0_0000".U)
-        }
+    "J-type immediates" should "pass" in {
+        test(new IImmGenTester(new ImmGenSimple(xlen), count, JImm)).runUntilStop()
     }
 }
