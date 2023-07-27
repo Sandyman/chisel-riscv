@@ -66,7 +66,7 @@ class BrancherTester(brgen: => BrancherGen, count: => Int, sel: => UInt) extends
 
     when(done) { stop() }
     assert(dut.io.br_assert === out)
-    printf("Counter: %d, rs1: %d, rs2: %d, sel: %x, Assert: %x ?= %x\n", 
+    printf("Counter: %d, rs1: 0x%x, rs2: 0x%x, sel: %x, Assert: %x ?= %x\n",
         cntr, rs1, rs2, sel, dut.io.br_assert, out)
 }
 class BrancherTests extends AnyFlatSpec with ChiselScalatestTester {
