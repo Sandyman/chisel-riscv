@@ -1,153 +1,76 @@
 package eek
 
 import chisel3._
+import chisel3.testers._
+import chisel3.util._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 import BranchType._
 
-class BasicBrancherEQNETest extends AnyFlatSpec with ChiselScalatestTester {
-    val xlen = 32 // Width of register in bits
-    it should "branch if both inputs are 0" in {
-        test(new BrancherGenSimple(xlen)) { r =>
-            r.io.sel.poke(EQ)
+class BrancherTester(brgen: => BrancherGen, count: => Int, sel: => UInt) extends BasicTester {
+    val dut = Module(brgen)
+    val xlen = dut.xlen
 
-            r.io.rs1.poke(0.U)
-            r.io.rs2.poke(0.U)
-            r.io.br_assert.expect(1.B)
-        }
-    }
-    it should "branch if both inputs are equal and non-zero" in {
-        test(new BrancherGenSimple(xlen)) { r =>
-            r.io.sel.poke(EQ)
+    val rnd = new scala.util.Random
 
-            r.io.rs1.poke(897.U)
-            r.io.rs2.poke(897.U)
-            r.io.br_assert.expect(1.B)
-        }
-    }
-    it should "not branch if inputs are not equal" in {        
-        test(new BrancherGenSimple(xlen)) { r =>
-            r.io.sel.poke(EQ)
+    assert(count > 0, "Count must be at least 1.")
 
-            r.io.rs1.poke(23.U)
-            r.io.rs2.poke(123.U)
-            r.io.br_assert.expect(0.B)
-        }
-    }
-    it should "not branch if both inputs are 0" in {
-        test(new BrancherGenSimple(xlen)) { r =>
-            r.io.sel.poke(NE)
+    val (cntr, done) = Counter(true.B, count)
 
-            r.io.rs1.poke(0.U)
-            r.io.rs2.poke(0.U)
-            r.io.br_assert.expect(0.B)
-        }
-    }
-    it should "not branch if both inputs are equal and non-zero" in {
-        test(new BrancherGenSimple(xlen)) { r =>
-            r.io.sel.poke(NE)
+    // Create a bunch of random values starting with 0
+    val rs1Values = Seq(0, 1, 2, 3) ++ Seq.fill(count - 4)(rnd.nextInt())
+    val rs2Values = Seq(0, 1, 2, 3) ++ Seq.fill(count - 4)(rnd.nextInt())
 
-            r.io.rs1.poke(897.U)
-            r.io.rs2.poke(897.U)
-            r.io.br_assert.expect(0.B)
-        }
-    }
-    it should "branch if inputs are not equal" in {        
-        test(new BrancherGenSimple(xlen)) { r =>
-            r.io.sel.poke(NE)
+    val eq = VecInit(rs1Values.zip(rs2Values).map { case (a, b) =>
+        (if (a == b) 1 else 0 ).U(xlen.W)
+    })
+    val ne = VecInit(rs1Values.zip(rs2Values).map { case (a, b) =>
+        (if (a != b) 1 else 0 ).U(xlen.W)
+    })
+    val lt = VecInit(rs1Values.zip(rs2Values).map { case (a, b) =>
+        (if (a < b ) 1 else 0 ).U(xlen.W)
+    })
+    val ge = VecInit(rs1Values.zip(rs2Values).map { case (a, b) =>
+        (if (a >= b) 1 else 0 ).U(xlen.W)
+    })
 
-            r.io.rs1.poke(23.U)
-            r.io.rs2.poke(123.U)
-            r.io.br_assert.expect(1.B)
-        }
-    }
+    val rs1 = VecInit(rs1Values.map { x => (x.asSInt).asUInt })(cntr)
+    val rs2 = VecInit(rs2Values.map { x => (x.asSInt).asUInt })(cntr)
+
+    dut.io.rs1 := rs1
+    dut.io.rs2 := rs2
+    dut.io.sel := sel
+
+    val out = MuxLookup(
+        sel,
+        eq(0),
+        Seq(
+            EQ -> eq(cntr),
+            NE -> ne(cntr),
+            LT -> lt(cntr),
+            GE -> ge(cntr),
+        )
+    )(0)
+
+    when(done) { stop() }
+    assert(dut.io.br_assert === out)
+    printf("Counter: %d, rs1: 0x%x, rs2: 0x%x, sel: %x, Out: %x ?= %x\n", 
+        cntr, rs1, rs2, sel, dut.io.br_assert, out)
 }
-class BasicBrancherLTGEUTest extends AnyFlatSpec with ChiselScalatestTester {
-    val xlen = 32 // Width of register in bits
-    it should "branch if rs1 < rs2" in {
-        test(new BrancherGenSimple(xlen)) { r =>
-            r.io.sel.poke(LTU)
-
-            r.io.rs1.poke(0.U)
-            r.io.rs2.poke(1.U)
-            r.io.br_assert.expect(1.B)
-        }
+class BrancherTests extends AnyFlatSpec with ChiselScalatestTester {
+    val xlen = 32
+    val count = 50
+    "Branch on equal" should "pass" in {
+        test(new BrancherTester(new BrancherGenSimple(xlen), count, EQ)).runUntilStop()
     }
-    it should "not branch if rs1 >= rs2" in {
-        test(new BrancherGenSimple(xlen)) { r =>
-            r.io.sel.poke(LTU)
-
-            r.io.rs1.poke(1.U)
-            r.io.rs2.poke(1.U)
-            r.io.br_assert.expect(0.B)
-
-            r.io.rs1.poke(8000.U)
-            r.io.rs2.poke(1.U)
-            r.io.br_assert.expect(0.B)
-        }
+    "Branch on not equal" should "pass" in {
+        test(new BrancherTester(new BrancherGenSimple(xlen), count, NE)).runUntilStop()
     }
-    it should "not branch if rs1 < rs2" in {
-        test(new BrancherGenSimple(xlen)) { r =>
-            r.io.sel.poke(GEU)
-
-            r.io.rs1.poke(0.U)
-            r.io.rs2.poke(1.U)
-            r.io.br_assert.expect(0.B)
-        }
+    "Branch on less than" should "pass" in {
+        test(new BrancherTester(new BrancherGenSimple(xlen), count, LT)).runUntilStop()
     }
-    it should "branch if rs1 >= rs2" in {
-        test(new BrancherGenSimple(xlen)) { r =>
-            r.io.sel.poke(GEU)
-
-            r.io.rs1.poke(1.U)
-            r.io.rs2.poke(1.U)
-            r.io.br_assert.expect(1.B)
-
-            r.io.rs1.poke(8000.U)
-            r.io.rs2.poke(1.U)
-            r.io.br_assert.expect(1.B)
-
-            r.io.rs1.poke("hffff_ffff".U)
-            r.io.rs2.poke(1.U)
-            r.io.br_assert.expect(1.B)
-        }
-    }
-}
-class BasicBrancherLTGESTest extends AnyFlatSpec with ChiselScalatestTester {
-    val xlen = 32 // Width of register in bits
-    it should "branch if rs1 < rs2 (signed)" in {
-        test(new BrancherGenSimple(xlen)) { r =>
-            r.io.sel.poke(LT)
-
-            r.io.rs1.poke(0.U)
-            r.io.rs2.poke(1.U)
-            r.io.br_assert.expect(1.B)
-
-            r.io.rs1.poke("hffff_fffe".U)
-            r.io.rs2.poke("hffff_ffff".U)
-            r.io.br_assert.expect(1.B)
-
-            r.io.rs1.poke("hffff_ffff".U)
-            r.io.rs2.poke(0.U)
-            r.io.br_assert.expect(1.B)
-        }
-    }
-    it should "branch if rs1 >= rs2 (signed)" in {
-        test(new BrancherGenSimple(xlen)) { r =>
-            r.io.sel.poke(GE)
-
-            r.io.rs1.poke(1.U)
-            r.io.rs2.poke(1.U)
-            r.io.br_assert.expect(1.B)
-
-            r.io.rs1.poke(8000.U)
-            r.io.rs2.poke(1.U)
-            r.io.br_assert.expect(1.B)
-
-            r.io.rs1.poke("hffff_ffff".U)
-            r.io.rs2.poke(0.U)
-            r.io.br_assert.expect(0.B)
-        }
+    "Branch on greater than or equal" should "pass" in {
+        test(new BrancherTester(new BrancherGenSimple(xlen), count, GE)).runUntilStop()
     }
 }
