@@ -8,14 +8,11 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 import BranchType._
 
-class BrancherTester(brgen: => BrancherGen, count: => Int, sel: => UInt) extends BasicTester {
+class BrancherTester(brgen: => BrancherGen, count: => Int, sel: => UInt) extends BasicTester with TestUtils {
     val dut = Module(brgen)
     val xlen = dut.xlen
 
     val rnd = new scala.util.Random
-
-    // Convert Int into BigInt keeping its sign
-    def toBigInt(x: Int): BigInt = (BigInt(x >>> 1) << 1) | (x & 1)
 
     assert(count > 0, "Count must be at least 1.")
 
