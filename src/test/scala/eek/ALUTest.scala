@@ -27,6 +27,8 @@ class AluGenTester(brgen: => AluGen, count: => Int, oper: => UInt) extends Basic
     def sub(x: UInt, y: UInt): UInt = { (x - y) & "hffff_ffff".U }
     def sll(x: UInt, y: UInt): UInt = { (x << y(4, 0)) & "hffff_ffff".U }
     def slt(x: UInt, y: UInt): UInt = { Mux(x.asSInt < y.asSInt, 1.U, 0.U) }
+    def sltu(x: UInt, y: UInt): UInt = { Mux(x.asUInt < y.asUInt, 1.U, 0.U) }
+    def xor(x: UInt, y: UInt): UInt = { (x ^ y) & "hffff_ffff".U }
 
     val out = MuxLookup(
         oper,
@@ -36,6 +38,8 @@ class AluGenTester(brgen: => AluGen, count: => Int, oper: => UInt) extends Basic
             SUB -> sub(rs1(cntr), rs2(cntr)),
             SLL -> sll(rs1(cntr), rs2(cntr)),
             SLT -> slt(rs1(cntr), rs2(cntr)),
+            SLTU -> sltu(rs1(cntr), rs2(cntr)),
+            XOR -> xor(rs1(cntr), rs2(cntr)),
         )
     )
 
@@ -45,7 +49,7 @@ class AluGenTester(brgen: => AluGen, count: => Int, oper: => UInt) extends Basic
 
     when(done) { stop() }
     assert(dut.io.rdData === out)
-    printf("Counter: %d, rs1: %x, rs2: %x, sel = %x, rd: %x ?= %x\n", cntr, rs1(cntr), rs2(cntr), oper, dut.io.rdData, out)
+    printf("Counter: %d, rs1: %x, rs2: %x, sel = %x, rd: %x ?= %x\n", cntr, rs1(cntr), rs2(cntr), oper, dut.io.rdData, out(31, 0))
 }
 class AluGenTests extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32
@@ -62,86 +66,15 @@ class AluGenTests extends AnyFlatSpec with ChiselScalatestTester {
     "ALU SLT" should "pass" in {
         test(new AluGenTester(new AluSimple(xlen), count, SLT)).runUntilStop()
     }
-}
-
-
-class BasicALUSLTTest extends AnyFlatSpec with ChiselScalatestTester {
-    val xlen = 32 // Width of register in bits
-    it should "compare positive numbers" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(SLT)
-            r.io.rs1Data.poke(13)
-            r.io.rs2Data.poke(15)
-            r.io.rdData.expect(1)
-
-            r.io.rs1Data.poke(27)
-            r.io.rdData.expect(0)
-
-            r.io.rs2Data.poke(27)
-            r.io.rdData.expect(0)
-        }
+    "ALU SLTU" should "pass" in {
+        test(new AluGenTester(new AluSimple(xlen), count, SLTU)).runUntilStop()
     }
-    it should "compare negative numbers" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(SLT)
-
-            // -3 < -2 => True
-            r.io.rs1Data.poke("hffff_fffd".U)
-            r.io.rs2Data.poke("hffff_fffe".U)
-            r.io.rdData.expect(1)
-
-            // -2 < -1 => False
-            r.io.rs1Data.poke("hffff_ffff".U)
-            r.io.rdData.expect(0)
-
-            // -1 < 0 => True
-            r.io.rs2Data.poke(0)
-            r.io.rdData.expect(1)
-        }
+    "ALU XOR" should "pass" in {
+        test(new AluGenTester(new AluSimple(xlen), count, XOR)).runUntilStop()
     }
 }
-class BasicALUSLTUTest extends AnyFlatSpec with ChiselScalatestTester {
-    val xlen = 32 // Width of register in bits
-    it should "compare positive numbers" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(SLTU)
 
-            // 13 < 15 => True
-            r.io.rs1Data.poke(13)
-            r.io.rs2Data.poke(15)
-            r.io.rdData.expect(1)
 
-            // 27 < 15 => False
-            r.io.rs1Data.poke(27)
-            r.io.rdData.expect(0)
-
-            // 27 < 27 => False
-            r.io.rs2Data.poke(27)
-            r.io.rdData.expect(0)
-
-            // (2^32 - 1) < 27 => False
-            r.io.rs1Data.poke("hffff_ffff".U)
-            r.io.rdData.expect(0)
-        }
-    }
-}
-class BasicALUXORTest extends AnyFlatSpec with ChiselScalatestTester {
-    val xlen = 32 // Width of register in bits
-    it should "do XOR correctly" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(XOR)
-
-            // 0xaa ^ 0xff => 0x55
-            r.io.rs1Data.poke("haaaa_aaaa".U)
-            r.io.rs2Data.poke("hffff_ffff".U)
-            r.io.rdData.expect(0x5555_5555)
-
-            // 0xff ^ 0xff => 0x00
-            r.io.rs1Data.poke("hffff_ffff".U)
-            r.io.rdData.expect(0)
-        }
-    }
-}
 class BasicALUSRLTest extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32 // Width of register in bits
     it should "half value when shifted to right by 1" in {
