@@ -38,7 +38,7 @@ class AluSimple(val xlen: Int) extends AluGen {
     val add: UInt => UInt = a => io.rs1Data + a
     val sll: UInt => UInt = a => {
         // Make sure we use as little bits as needed. This is necessary
-        // as {dhsl} widens the target variable by as many bits as needed
+        // as {dshl} widens the target variable by as many bits as needed
         // to perform the left shift. - FIRRTL Spec., Version 0.2.0, 7.13
         val shft = Wire(UInt(xlen.W))
         shft := io.rs1Data << a(4, 0)
