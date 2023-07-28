@@ -1,92 +1,70 @@
 package eek
 
 import chisel3._
+import chisel3.testers._
+import chisel3.util._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 import Operation._
 
-class BasicALUADDITest extends AnyFlatSpec with ChiselScalatestTester {
-    val xlen = 32 // Width of register in bits
-    it should "add positive immediate to register" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(ADD)
-            r.io.rs1Data.poke(0)
-            r.io.rs2Data.poke(1)
-            r.io.rdData.expect(1)
-        }
+class AluGenTester(brgen: => AluGen, count: => Int, oper: => UInt) extends BasicTester with TestUtils {
+    val dut = Module(brgen)
+    val xlen = dut.xlen
+
+    val rnd = new scala.util.Random
+
+    val (cntr, done) = Counter(true.B, count)
+
+    // Create a bunch of random values
+    val rs1Values = (Seq.fill(count)(rnd.nextInt())).map(toBigInt)
+    val rs2Values = (Seq.fill(count)(rnd.nextInt())).map(toBigInt)
+
+    val rs1 = VecInit(rs1Values.map { x => ((x.toInt).asSInt).asUInt })
+    val rs2 = VecInit(rs2Values.map { x => ((x.toInt).asSInt).asUInt })
+
+    def add(x: UInt, y: UInt): UInt = { (x + y) & "hffff_ffff".U }
+    def sub(x: UInt, y: UInt): UInt = { (x - y) & "hffff_ffff".U }
+    def sll(x: UInt, y: UInt): UInt = { (x << y(4, 0)) & "hffff_ffff".U }
+    def slt(x: UInt, y: UInt): UInt = { Mux(x.asSInt < y.asSInt, 1.U, 0.U) }
+
+    val out = MuxLookup(
+        oper,
+        add(rs1(0), rs2(0)),
+        Seq(
+            ADD -> add(rs1(cntr), rs2(cntr)),
+            SUB -> sub(rs1(cntr), rs2(cntr)),
+            SLL -> sll(rs1(cntr), rs2(cntr)),
+            SLT -> slt(rs1(cntr), rs2(cntr)),
+        )
+    )
+
+    dut.io.rs1Data := rs1(cntr).asUInt
+    dut.io.rs2Data := rs2(cntr).asUInt
+    dut.io.oper := oper
+
+    when(done) { stop() }
+    assert(dut.io.rdData === out)
+    printf("Counter: %d, rs1: %x, rs2: %x, sel = %x, rd: %x ?= %x\n", cntr, rs1(cntr), rs2(cntr), oper, dut.io.rdData, out)
+}
+class AluGenTests extends AnyFlatSpec with ChiselScalatestTester {
+    val xlen = 32
+    val count = 50
+    "ALU ADD" should "pass" in {
+        test(new AluGenTester(new AluSimple(xlen), count, ADD)).runUntilStop()
     }
-    it should "add negative immediate to register" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(ADD)
-            r.io.rs1Data.poke(1)
-            r.io.rs2Data.poke("hffff_ffff".U)
-            r.io.rdData.expect(0)
-        }
+    "ALU SUB" should "pass" in {
+        test(new AluGenTester(new AluSimple(xlen), count, SUB)).runUntilStop()
     }
-    it should "return negative number when added to 0" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(ADD)
-            r.io.rs1Data.poke(0)
-            r.io.rs2Data.poke("hffff_fffe".U)
-            r.io.rdData.expect("hffff_fffe".U)
-        }
+    "ALU SLL" should "pass" in {
+        test(new AluGenTester(new AluSimple(xlen), count, SLL)).runUntilStop()
     }
-    it should "allow adding a positive number to a negative number" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(ADD)
-            r.io.rs1Data.poke("hffff_fffe".U)
-            r.io.rs2Data.poke(15)
-            r.io.rdData.expect(13)
-        }
+    "ALU SLT" should "pass" in {
+        test(new AluGenTester(new AluSimple(xlen), count, SLT)).runUntilStop()
     }
 }
-class BasicALUSUBTest extends AnyFlatSpec with ChiselScalatestTester {
-    val xlen = 32 // Width of register in bits
-    it should "subtract numbers" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(SUB)
-            r.io.rs1Data.poke(13)
-            r.io.rs2Data.poke(12)
-            r.io.rdData.expect(1)
-        }
-    }
-    it should "subtract numbers and yield negative result" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(SUB)
-            r.io.rs1Data.poke(12)
-            r.io.rs2Data.poke(13)
-            r.io.rdData.expect("hffff_ffff".U)
-        }
-    }
-    it should "negate any value when subtracted from 0" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(SUB)
-            r.io.rs1Data.poke(0)
-            r.io.rs2Data.poke(13)
-            r.io.rdData.expect("hffff_fff3".U)
-        }
-    }
-}
-class BasicALUSLLTest extends AnyFlatSpec with ChiselScalatestTester {
-    val xlen = 32 // Width of register in bits
-    it should "double value when shifted to left by 1" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(SLL)
-            r.io.rs1Data.poke(13)
-            r.io.rs2Data.poke(1)
-            r.io.rdData.expect(26)
-        }
-    }
-    it should "become zero when shift too far" in {
-        test(new AluSimple(xlen)) { r =>
-            r.io.oper.poke(SLL)
-            r.io.rs1Data.poke(12)
-            r.io.rs2Data.poke(31)
-            r.io.rdData.expect(0)
-        }
-    }
-}
+
+
 class BasicALUSLTTest extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32 // Width of register in bits
     it should "compare positive numbers" in {
