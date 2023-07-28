@@ -8,7 +8,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 import ImmType._
 
-class IImmGenTester(immgen: => ImmGen, count: => Int, sel: => UInt) extends BasicTester {
+class ImmGenTester(immgen: => ImmGen, count: => Int, sel: => UInt) extends BasicTester {
     val dut = Module(immgen)
     val xlen = dut.xlen
 
@@ -55,18 +55,18 @@ class ImmGenTests extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32
     val count = 50
     "I-type immediates" should "pass" in {
-        test(new IImmGenTester(new ImmGenSimple(xlen), count, IImm)).runUntilStop()
+        test(new ImmGenTester(new ImmGenSimple(xlen), count, IImm)).runUntilStop()
     }
     "U-type immediates" should "pass" in {
-        test(new IImmGenTester(new ImmGenSimple(xlen), count, UImm)).runUntilStop()
+        test(new ImmGenTester(new ImmGenSimple(xlen), count, UImm)).runUntilStop()
     }
     "S-type immediates" should "pass" in {
-        test(new IImmGenTester(new ImmGenSimple(xlen), count, SImm)).runUntilStop()
+        test(new ImmGenTester(new ImmGenSimple(xlen), count, SImm)).runUntilStop()
     }
     "B-type immediates" should "pass" in {
-        test(new IImmGenTester(new ImmGenSimple(xlen), count, BImm)).runUntilStop()
+        test(new ImmGenTester(new ImmGenSimple(xlen), count, BImm)).runUntilStop()
     }
     "J-type immediates" should "pass" in {
-        test(new IImmGenTester(new ImmGenSimple(xlen), count, JImm)).runUntilStop()
+        test(new ImmGenTester(new ImmGenSimple(xlen), count, JImm)).runUntilStop()
     }
 }

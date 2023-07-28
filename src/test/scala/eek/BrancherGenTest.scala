@@ -8,7 +8,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 import BranchType._
 
-class BrancherTester(brgen: => BrancherGen, count: => Int, sel: => UInt) extends BasicTester with TestUtils {
+class BrancherGenTester(brgen: => BrancherGen, count: => Int, sel: => UInt) extends BasicTester with TestUtils {
     val dut = Module(brgen)
     val xlen = dut.xlen
 
@@ -70,21 +70,21 @@ class BrancherTests extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32
     val count = 50
     "Branch on equal" should "pass" in {
-        test(new BrancherTester(new BrancherGenSimple(xlen), count, EQ)).runUntilStop()
+        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, EQ)).runUntilStop()
     }
     "Branch on not equal" should "pass" in {
-        test(new BrancherTester(new BrancherGenSimple(xlen), count, NE)).runUntilStop()
+        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, NE)).runUntilStop()
     }
     "Branch on less than" should "pass" in {
-        test(new BrancherTester(new BrancherGenSimple(xlen), count, LT)).runUntilStop()
+        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, LT)).runUntilStop()
     }
     "Branch on greater than or equal" should "pass" in {
-        test(new BrancherTester(new BrancherGenSimple(xlen), count, GE)).runUntilStop()
+        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, GE)).runUntilStop()
     }
     "Branch on less than (U)" should "pass" in {
-        test(new BrancherTester(new BrancherGenSimple(xlen), count, LTU)).runUntilStop()
+        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, LTU)).runUntilStop()
     }
     "Branch on greater than or equal (U)" should "pass" in {
-        test(new BrancherTester(new BrancherGenSimple(xlen), count, GEU)).runUntilStop()
+        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, GEU)).runUntilStop()
     }
 }
