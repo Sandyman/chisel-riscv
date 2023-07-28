@@ -26,12 +26,12 @@ class AluIO(xlen: Int) extends Bundle {
     val rdData  = Output(UInt(xlen.W))
 }
 
-trait Alu extends Module {
+trait AluGen extends Module {
     def xlen: Int
     val io: AluIO
 }
 
-class AluSimple(val xlen: Int) extends Alu {
+class AluSimple(val xlen: Int) extends AluGen {
     val io = IO(new AluIO(xlen))
 
     val add: UInt => UInt = a => io.rs1Data + a
