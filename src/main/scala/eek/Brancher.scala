@@ -1,6 +1,7 @@
 package eek
 
 import chisel3._
+import chisel3.stage._
 import chisel3.util._
 import chisel3.experimental._
 
@@ -49,4 +50,9 @@ class BrancherGenSimple(val xlen: Int) extends BrancherGen {
             GE -> ge,
         )
     )
+}
+
+object BrancherDriver extends App {
+    val xlen = 32
+    (new ChiselStage).emitVerilog(new BrancherGenSimple(xlen), args)
 }

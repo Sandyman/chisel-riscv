@@ -1,6 +1,7 @@
 package eek
 
 import chisel3._
+import chisel3.stage._
 import chisel3.util.log2Ceil
 
 class RegFileIO(m: Int, xlen: Int) extends Bundle {
@@ -34,4 +35,10 @@ class SimpleRegFile(val m: Int, val xlen: Int) extends RegFile {
     when (io.wen & io.wrAddr.orR) {
         regs(io.wrAddr) := io.wrData
     }
+}
+
+object RegFileDriver extends App {
+    val m = 32
+    val xlen = 32
+    (new ChiselStage).emitVerilog(new SimpleRegFile(m, xlen), args)
 }
