@@ -1,6 +1,7 @@
 package eek
 
 import chisel3._
+import chisel3.stage._
 import chisel3.util._
 import chisel3.experimental._
 
@@ -35,7 +36,14 @@ class AluSimple(val xlen: Int) extends AluGen {
     val io = IO(new AluIO(xlen))
 
     val add: UInt => UInt = a => io.rs1Data + a
-    val sll: UInt => UInt = a => io.rs1Data << a(4, 0)
+    val sll: UInt => UInt = a => {
+        // Make sure we use as little bits as needed. This is necessary
+        // as {dhsl} widens the target variable by as many bits as needed
+        // to perform the left shift. - FIRRTL Spec., Version 0.2.0, 7.13
+        val shft = Wire(UInt(xlen.W))
+        shft := io.rs1Data << a(4, 0)
+        shft
+    }
     val slt: UInt => UInt = a => Mux(io.rs1Data.asSInt < a.asSInt, 1.U, 0.U)
     val sltu: UInt => UInt = a => Mux(io.rs1Data < a, 1.U, 0.U)
     val xor: UInt => UInt = a => io.rs1Data ^ a
@@ -60,4 +68,9 @@ class AluSimple(val xlen: Int) extends AluGen {
             AND -> and(io.rs2Data),
         )
     )
+}
+
+object AluDriver extends App {
+    val xlen = 32
+    (new ChiselStage).emitVerilog(new AluSimple(xlen), args)
 }
