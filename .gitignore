@@ -1,4 +1,7 @@
 ### Project Specific stuff
+*.json
+*.fir
+*.v
 test_run_dir/*
 ### XilinxISE template
 # intermediate build files
