@@ -1,6 +1,7 @@
 package eek
 
 import chisel3._
+import chisel3.stage._
 import chisel3.util._
 import chisel3.experimental._
 
@@ -45,4 +46,9 @@ class ImmGenSimple (val xlen: Int) extends ImmGen {
             JImm -> imm_j,
         )
     ).asUInt
+}
+
+object ImmGenDriver extends App {
+    val xlen = 32
+    (new ChiselStage).emitVerilog(new ImmGenSimple(xlen), args)
 }
