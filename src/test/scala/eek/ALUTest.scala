@@ -20,8 +20,8 @@ class AluGenTester(brgen: => AluGen, count: => Int, oper: => UInt) extends Basic
     val rs1Values = (Seq.fill(count)(rnd.nextInt())).map(toBigInt)
     val rs2Values = (Seq.fill(count)(rnd.nextInt())).map(toBigInt)
 
-    val rs1 = VecInit(rs1Values.map { x => ((x.toInt).asSInt).asUInt })
-    val rs2 = VecInit(rs2Values.map { x => ((x.toInt).asSInt).asUInt })
+    val rs1Data = VecInit(rs1Values.map { x => ((x.toInt).asSInt).asUInt })
+    val rs2Data = VecInit(rs2Values.map { x => ((x.toInt).asSInt).asUInt })
 
     def add(x: UInt, y: UInt): UInt = { (x + y) & "hffff_ffff".U }
     def sub(x: UInt, y: UInt): UInt = { (x - y) & "hffff_ffff".U }
@@ -31,29 +31,36 @@ class AluGenTester(brgen: => AluGen, count: => Int, oper: => UInt) extends Basic
     def xor(x: UInt, y: UInt): UInt = { (x ^ y) & "hffff_ffff".U }
     def srl(x: UInt, y: UInt): UInt = { (x >> y(4, 0)) & "hffff_ffff".U }
     def sra(x: UInt, y: UInt): UInt = { (x.asSInt >> y(4, 0)).asUInt & "hffff_ffff".U }
+    def or(x: UInt, y: UInt): UInt = { (x | y) & "hffff_ffff".U }
+    def and(x: UInt, y: UInt): UInt = { (x & y) & "hffff_ffff".U }
+
+    val rs1 = rs1Data(cntr)
+    val rs2 = rs2Data(cntr)
 
     val out = MuxLookup(
         oper,
         add(rs1(0), rs2(0)),
         Seq(
-            ADD -> add(rs1(cntr), rs2(cntr)),
-            SUB -> sub(rs1(cntr), rs2(cntr)),
-            SLL -> sll(rs1(cntr), rs2(cntr)),
-            SLT -> slt(rs1(cntr), rs2(cntr)),
-            SLTU -> sltu(rs1(cntr), rs2(cntr)),
-            XOR -> xor(rs1(cntr), rs2(cntr)),
-            SRL -> srl(rs1(cntr), rs2(cntr)),
-            SRA -> sra(rs1(cntr), rs2(cntr)),
+            ADD -> add(rs1, rs2),
+            SUB -> sub(rs1, rs2),
+            SLL -> sll(rs1, rs2),
+            SLT -> slt(rs1, rs2),
+            SLTU -> sltu(rs1, rs2),
+            XOR -> xor(rs1, rs2),
+            SRL -> srl(rs1, rs2),
+            SRA -> sra(rs1, rs2),
+            OR -> or(rs1, rs2),
+            AND -> and(rs1, rs2),
         )
     )
 
-    dut.io.rs1Data := rs1(cntr).asUInt
-    dut.io.rs2Data := rs2(cntr).asUInt
+    dut.io.rs1Data := rs1.asUInt
+    dut.io.rs2Data := rs2.asUInt
     dut.io.oper := oper
 
     when(done) { stop() }
     assert(dut.io.rdData === out)
-    printf("Counter: %d, rs1: %x, rs2: %x, sel = %x, rd: %x ?= %x\n", cntr, rs1(cntr), rs2(cntr), oper, dut.io.rdData, out(31, 0))
+    printf("Counter: %d, rs1: %x, rs2: %x, sel = %x, rd: %x ?= %x\n", cntr, rs1, rs2, oper, dut.io.rdData, out(31, 0))
 }
 class AluGenTests extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32
@@ -81,6 +88,12 @@ class AluGenTests extends AnyFlatSpec with ChiselScalatestTester {
     }
     "ALU SRA" should "pass" in {
         test(new AluGenTester(new AluSimple(xlen), count, SRA)).runUntilStop()
+    }
+    "ALU OR" should "pass" in {
+        test(new AluGenTester(new AluSimple(xlen), count, OR)).runUntilStop()
+    }
+    "ALU AND" should "pass" in {
+        test(new AluGenTester(new AluSimple(xlen), count, AND)).runUntilStop()
     }
 }
 
