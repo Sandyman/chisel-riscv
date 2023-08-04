@@ -6,12 +6,13 @@ import chisel3.util._
 import chisel3.experimental._
 
 object BranchType {
-    val EQ     = 0.U(3.W)
-    val NE     = 1.U(3.W)
-    val LT     = 4.U(3.W)
-    val GE     = 5.U(3.W)
-    val LTU    = 6.U(3.W)
-    val GEU    = 7.U(3.W)
+    val BR_NONE   = 0.U(3.W)
+    val BR_EQ     = 2.U(3.W)
+    val BR_NE     = 3.U(3.W)
+    val BR_LT     = 4.U(3.W)
+    val BR_GE     = 5.U(3.W)
+    val BR_LTU    = 6.U(3.W)
+    val BR_GEU    = 7.U(3.W)
 }
 
 import BranchType._
@@ -42,12 +43,12 @@ class BrancherGenSimple(val xlen: Int) extends BrancherGen {
         io.sel,
         0.B,
         Seq(
-            EQ -> eq,
-            NE -> ne,
-            LTU -> ltu,
-            LT -> lt,
-            GEU -> geu,
-            GE -> ge,
+            BR_EQ -> eq,
+            BR_NE -> ne,
+            BR_LTU -> ltu,
+            BR_LT -> lt,
+            BR_GEU -> geu,
+            BR_GE -> ge,
         )
     )
 }
