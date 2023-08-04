@@ -6,16 +6,17 @@ import chisel3.util._
 import chisel3.experimental._
 
 object Operation {
-    val ADD    = 0.U(4.W)
-    val SUB    = 1.U(4.W)
-    val SLL    = 2.U(4.W)
-    val SLT    = 3.U(4.W)
-    val SLTU   = 4.U(4.W)
-    val XOR    = 5.U(4.W)
-    val SRL    = 6.U(4.W)
-    val SRA    = 7.U(4.W)
-    val OR     = 8.U(4.W)
-    val AND    = 9.U(4.W)
+    val OP_NONE   =  0.U(4.W)
+    val OP_ADD    =  1.U(4.W)
+    val OP_SUB    =  2.U(4.W)
+    val OP_SLL    =  3.U(4.W)
+    val OP_SLT    =  4.U(4.W)
+    val OP_SLTU   =  5.U(4.W)
+    val OP_XOR    =  6.U(4.W)
+    val OP_SRL    =  7.U(4.W)
+    val OP_SRA    =  8.U(4.W)
+    val OP_OR     =  9.U(4.W)
+    val OP_AND    = 10.U(4.W)
 }
 
 import Operation._
@@ -56,16 +57,16 @@ class AluSimple(val xlen: Int) extends AluGen {
         io.oper,
         io.rs1Data,
         Seq(
-            ADD -> add(io.rs2Data),
-            SUB -> add(-io.rs2Data),
-            SLL -> sll(io.rs2Data),
-            SLT -> slt(io.rs2Data),
-            SLTU -> sltu(io.rs2Data),
-            XOR -> xor(io.rs2Data),
-            SRL -> srl(io.rs2Data),
-            SRA -> sra(io.rs2Data),
-            OR -> or(io.rs2Data),
-            AND -> and(io.rs2Data),
+            OP_ADD -> add(io.rs2Data),
+            OP_SUB -> add(-io.rs2Data),
+            OP_SLL -> sll(io.rs2Data),
+            OP_SLT -> slt(io.rs2Data),
+            OP_SLTU -> sltu(io.rs2Data),
+            OP_XOR -> xor(io.rs2Data),
+            OP_SRL -> srl(io.rs2Data),
+            OP_SRA -> sra(io.rs2Data),
+            OP_OR -> or(io.rs2Data),
+            OP_AND -> and(io.rs2Data),
         )
     )
 }

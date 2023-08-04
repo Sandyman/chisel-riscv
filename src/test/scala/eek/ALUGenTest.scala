@@ -41,16 +41,16 @@ class AluGenTester(brgen: => AluGen, count: => Int, oper: => UInt) extends Basic
         oper,
         add(rs1(0), rs2(0)),
         Seq(
-            ADD -> add(rs1, rs2),
-            SUB -> sub(rs1, rs2),
-            SLL -> sll(rs1, rs2),
-            SLT -> slt(rs1, rs2),
-            SLTU -> sltu(rs1, rs2),
-            XOR -> xor(rs1, rs2),
-            SRL -> srl(rs1, rs2),
-            SRA -> sra(rs1, rs2),
-            OR -> or(rs1, rs2),
-            AND -> and(rs1, rs2),
+            OP_ADD -> add(rs1, rs2),
+            OP_SUB -> sub(rs1, rs2),
+            OP_SLL -> sll(rs1, rs2),
+            OP_SLT -> slt(rs1, rs2),
+            OP_SLTU -> sltu(rs1, rs2),
+            OP_XOR -> xor(rs1, rs2),
+            OP_SRL -> srl(rs1, rs2),
+            OP_SRA -> sra(rs1, rs2),
+            OP_OR -> or(rs1, rs2),
+            OP_AND -> and(rs1, rs2),
         )
     )
 
@@ -66,33 +66,33 @@ class AluGenTests extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32
     val count = 50
     "ALU ADD" should "pass" in {
-        test(new AluGenTester(new AluSimple(xlen), count, ADD)).runUntilStop()
+        test(new AluGenTester(new AluSimple(xlen), count, OP_ADD)).runUntilStop()
     }
     "ALU SUB" should "pass" in {
-        test(new AluGenTester(new AluSimple(xlen), count, SUB)).runUntilStop()
+        test(new AluGenTester(new AluSimple(xlen), count, OP_SUB)).runUntilStop()
     }
     "ALU SLL" should "pass" in {
-        test(new AluGenTester(new AluSimple(xlen), count, SLL)).runUntilStop()
+        test(new AluGenTester(new AluSimple(xlen), count, OP_SLL)).runUntilStop()
     }
     "ALU SLT" should "pass" in {
-        test(new AluGenTester(new AluSimple(xlen), count, SLT)).runUntilStop()
+        test(new AluGenTester(new AluSimple(xlen), count, OP_SLT)).runUntilStop()
     }
     "ALU SLTU" should "pass" in {
-        test(new AluGenTester(new AluSimple(xlen), count, SLTU)).runUntilStop()
+        test(new AluGenTester(new AluSimple(xlen), count, OP_SLTU)).runUntilStop()
     }
     "ALU XOR" should "pass" in {
-        test(new AluGenTester(new AluSimple(xlen), count, XOR)).runUntilStop()
+        test(new AluGenTester(new AluSimple(xlen), count, OP_XOR)).runUntilStop()
     }
     "ALU SRL" should "pass" in {
-        test(new AluGenTester(new AluSimple(xlen), count, SRL)).runUntilStop()
+        test(new AluGenTester(new AluSimple(xlen), count, OP_SRL)).runUntilStop()
     }
     "ALU SRA" should "pass" in {
-        test(new AluGenTester(new AluSimple(xlen), count, SRA)).runUntilStop()
+        test(new AluGenTester(new AluSimple(xlen), count, OP_SRA)).runUntilStop()
     }
     "ALU OR" should "pass" in {
-        test(new AluGenTester(new AluSimple(xlen), count, OR)).runUntilStop()
+        test(new AluGenTester(new AluSimple(xlen), count, OP_OR)).runUntilStop()
     }
     "ALU AND" should "pass" in {
-        test(new AluGenTester(new AluSimple(xlen), count, AND)).runUntilStop()
+        test(new AluGenTester(new AluSimple(xlen), count, OP_AND)).runUntilStop()
     }
 }
