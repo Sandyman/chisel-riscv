@@ -52,12 +52,12 @@ class BrancherGenTester(brgen: => BrancherGen, count: => Int, sel: => UInt) exte
         sel,
         eq(0),
         Seq(
-            EQ -> eq(cntr),
-            NE -> ne(cntr),
-            LT -> lt(cntr),
-            GE -> ge(cntr),
-            LTU -> ltu(cntr),
-            GEU -> geu(cntr),
+            BR_EQ -> eq(cntr),
+            BR_NE -> ne(cntr),
+            BR_LT -> lt(cntr),
+            BR_GE -> ge(cntr),
+            BR_LTU -> ltu(cntr),
+            BR_GEU -> geu(cntr),
         )
     )
 
@@ -66,25 +66,26 @@ class BrancherGenTester(brgen: => BrancherGen, count: => Int, sel: => UInt) exte
     printf("Counter: %d, rs1: 0x%x, rs2: 0x%x, sel: %x, Assert: %x ?= %x\n",
         cntr, rs1, rs2, sel, dut.io.br_assert, out)
 }
+
 class BrancherTests extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32
     val count = 50
     "Branch on equal" should "pass" in {
-        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, EQ)).runUntilStop()
+        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, BR_EQ)).runUntilStop()
     }
     "Branch on not equal" should "pass" in {
-        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, NE)).runUntilStop()
+        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, BR_NE)).runUntilStop()
     }
     "Branch on less than" should "pass" in {
-        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, LT)).runUntilStop()
+        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, BR_LT)).runUntilStop()
     }
     "Branch on greater than or equal" should "pass" in {
-        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, GE)).runUntilStop()
+        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, BR_GE)).runUntilStop()
     }
     "Branch on less than (U)" should "pass" in {
-        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, LTU)).runUntilStop()
+        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, BR_LTU)).runUntilStop()
     }
     "Branch on greater than or equal (U)" should "pass" in {
-        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, GEU)).runUntilStop()
+        test(new BrancherGenTester(new BrancherGenSimple(xlen), count, BR_GEU)).runUntilStop()
     }
 }
