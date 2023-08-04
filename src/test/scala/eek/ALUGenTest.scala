@@ -8,8 +8,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 import Operation._
 
-class AluGenTester(brgen: => AluGen, count: => Int, oper: => UInt) extends BasicTester with TestUtils {
-    val dut = Module(brgen)
+class AluGenTester(alugen: => AluGen, count: => Int, oper: => UInt) extends BasicTester with TestUtils {
+    val dut = Module(alugen)
     val xlen = dut.xlen
 
     val rnd = new scala.util.Random
