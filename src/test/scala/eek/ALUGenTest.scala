@@ -54,13 +54,13 @@ class AluGenTester(brgen: => AluGen, count: => Int, oper: => UInt) extends Basic
         )
     )
 
-    dut.io.rs1Data := rs1.asUInt
-    dut.io.rs2Data := rs2.asUInt
+    dut.io.aData := rs1.asUInt
+    dut.io.bData := rs2.asUInt
     dut.io.oper := oper
 
     when(done) { stop() }
-    assert(dut.io.rdData === out)
-    printf("Counter: %d, rs1: %x, rs2: %x, sel = %x, rd: %x ?= %x\n", cntr, rs1, rs2, oper, dut.io.rdData, out(31, 0))
+    assert(dut.io.yData === out)
+    printf("Counter: %d, rs1: %x, rs2: %x, sel = %x, rd: %x ?= %x\n", cntr, rs1, rs2, oper, dut.io.yData, out(31, 0))
 }
 class AluGenTests extends AnyFlatSpec with ChiselScalatestTester {
     val xlen = 32

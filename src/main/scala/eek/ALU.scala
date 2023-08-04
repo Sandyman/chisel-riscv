@@ -23,9 +23,9 @@ import Operation._
 
 class AluIO(xlen: Int) extends Bundle {
     val oper = Input(UInt(xlen.W))
-    val rs1Data = Input(UInt(xlen.W))
-    val rs2Data = Input(UInt(xlen.W))
-    val rdData  = Output(UInt(xlen.W))
+    val aData = Input(UInt(xlen.W))
+    val bData = Input(UInt(xlen.W))
+    val yData  = Output(UInt(xlen.W))
 }
 
 trait AluGen extends Module {
@@ -36,37 +36,37 @@ trait AluGen extends Module {
 class AluSimple(val xlen: Int) extends AluGen {
     val io = IO(new AluIO(xlen))
 
-    val add: UInt => UInt = a => io.rs1Data + a
-    val sll: UInt => UInt = a => {
+    val add: UInt => UInt = x => io.aData + x
+    val sll: UInt => UInt = x => {
         // Make sure we use as little bits as needed. This is necessary
         // as {dshl} widens the target variable by as many bits as needed
         // to perform the left shift. - FIRRTL Spec., Version 0.2.0, 7.13
         val shft = Wire(UInt(xlen.W))
-        shft := io.rs1Data << a(4, 0)
+        shft := io.aData << x(4, 0)
         shft
     }
-    val slt: UInt => UInt = a => Mux(io.rs1Data.asSInt < a.asSInt, 1.U, 0.U)
-    val sltu: UInt => UInt = a => Mux(io.rs1Data < a, 1.U, 0.U)
-    val xor: UInt => UInt = a => io.rs1Data ^ a
-    val srl: UInt => UInt = a => io.rs1Data >> a(4, 0)
-    val sra: UInt => UInt = a => (io.rs1Data.asSInt >> a(4, 0)).asUInt
-    val or: UInt => UInt = a => io.rs1Data | a
-    val and: UInt => UInt = a => io.rs1Data & a
+    val slt: UInt => UInt = x => Mux(io.aData.asSInt < x.asSInt, 1.U, 0.U)
+    val sltu: UInt => UInt = x => Mux(io.aData < x, 1.U, 0.U)
+    val xor: UInt => UInt = x => io.aData ^ x
+    val srl: UInt => UInt = x => io.aData >> x(4, 0)
+    val sra: UInt => UInt = x => (io.aData.asSInt >> x(4, 0)).asUInt
+    val or: UInt => UInt = x => io.aData | x
+    val and: UInt => UInt = x => io.aData & x
 
-    io.rdData := MuxLookup(
+    io.yData := MuxLookup(
         io.oper,
-        io.rs1Data,
+        io.aData,
         Seq(
-            OP_ADD -> add(io.rs2Data),
-            OP_SUB -> add(-io.rs2Data),
-            OP_SLL -> sll(io.rs2Data),
-            OP_SLT -> slt(io.rs2Data),
-            OP_SLTU -> sltu(io.rs2Data),
-            OP_XOR -> xor(io.rs2Data),
-            OP_SRL -> srl(io.rs2Data),
-            OP_SRA -> sra(io.rs2Data),
-            OP_OR -> or(io.rs2Data),
-            OP_AND -> and(io.rs2Data),
+            OP_ADD -> add(io.bData),
+            OP_SUB -> add(-io.bData),
+            OP_SLL -> sll(io.bData),
+            OP_SLT -> slt(io.bData),
+            OP_SLTU -> sltu(io.bData),
+            OP_XOR -> xor(io.bData),
+            OP_SRL -> srl(io.bData),
+            OP_SRA -> sra(io.bData),
+            OP_OR -> or(io.bData),
+            OP_AND -> and(io.bData),
         )
     )
 }
