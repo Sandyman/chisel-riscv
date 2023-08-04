@@ -9,22 +9,15 @@ object Signal {
     val Y    = 1.U(1.W)
 }
 
-import Signal._
-
 object AluAMux {
-    val A_MUX_RS1  = 0.U(2.W)
-    val A_MUX_PC   = 1.U(2.W)
-    val A_MUX_Z    = 2.U(2.W)
+    val A_MUX_RS1  = 0.U(1.W)
+    val A_MUX_PC   = 1.U(1.W)
 }
-
-import AluAMux._
 
 object AluBMux {
     val B_MUX_RS2  = 0.U(1.W)
     val B_MUX_IMM  = 1.U(1.W)
 }
-
-import AluBMux._
 
 object RegMux {
     val REG_MUX_ALU_Y = 0.U(2.W)
@@ -32,39 +25,37 @@ object RegMux {
     val REG_MUX_D_OUT = 2.U(2.W)
 }
 
-import RegMux._
-
 object PCMux {
     val PC_MUX_PC_4         = 0.U(2.W)
     val PC_MUX_PC_OFFSET_RS = 1.U(2.W)
     val PC_MUX_PC_OFFSET    = 2.U(2.W)
 }
 
-import PCMux._
-
 object RegRWEnable {
-    val REG_WEN_0   = 0.U(1.W)
-    val REG_WEN_1   = 1.U(1.W)
+    val REG_WEN_0   = false.B
+    val REG_WEN_1   = true.B
 }
-
-import RegRWEnable._
 
 object MemRWEnable {
-    val MEM_WEN_0   = 0.U(1.W)
-    val MEM_WEN_1   = 1.U(1.W)
-    val MEM_REN_0   = 0.U(1.W)
-    val MEM_REN_1   = 1.U(1.W)
+    val MEM_WEN_0   = false.B
+    val MEM_WEN_1   = true.B
+    val MEM_REN_0   = false.B
+    val MEM_REN_1   = true.B
 }
-
-import MemRWEnable._
 
 object BrTaken {
-    val BR_NOT_TAKEN = 0.U(1.W)
-    val BR_TAKEN     = 1.U(1.W)
+    val BR_NOT_TAKEN = false.B
+    val BR_TAKEN     = true.B
 }
 
+import Signal._
+import AluAMux._
+import AluBMux._
+import RegMux._
+import PCMux._
+import RegRWEnable._
+import MemRWEnable._
 import BrTaken._
-
 import Operation._
 import BranchType._
 import ImmType._
@@ -94,58 +85,62 @@ class SimpleCtrl(val xlen: Int) extends Ctrl {
 
     val ctrl_signals =
         ListLookup(io.inst,
-                         List(N, A_MUX_RS1, B_MUX_RS2, OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
+                          List(N, A_MUX_RS1, B_MUX_RS2, OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0,  IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
             Array(
                 // I-type instructions
-                ADDI  -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                SLTI  -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_SLT,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                SLTIU -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_SLTU, REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                XORI  -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_XOR,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                ORI   -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_OR,   REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                ANDI  -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_AND,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                SRLI  -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_SRL,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                SLLI  -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_SLL,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                SRAI  -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_SRA,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
+                ADDI   -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                SLTI   -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_SLT,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                SLTIU  -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_SLTU, REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                XORI   -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_XOR,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                ORI    -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_OR,   REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                ANDI   -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_AND,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                SRLI   -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_SRL,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                SLLI   -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_SLL,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                SRAI   -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_SRA,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
 
                 // R-type instructions
-                ADD   -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                SUB   -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_SUB,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                SLL   -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_SLL,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                SLT   -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_SLT,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                SLTU  -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_SLTU, REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                XOR   -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_XOR,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                SRL   -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_SRL,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                SRA   -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_SRA,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                OR    -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_OR,   REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                AND   -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_AND,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
+                ADD    -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                SUB    -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_SUB,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                SLL    -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_SLL,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                SLT    -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_SLT,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                SLTU   -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_SLTU, REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                XOR    -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_XOR,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                SRL    -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_SRL,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                SRA    -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_SRA,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                OR     -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_OR,   REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                AND    -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_AND,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
 
                 // B-type instructions
-                BEQ   -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_EQ),
-                BNE   -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NE),
-                BLTU  -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_LTU),
-                BLT   -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_LT),
-                BGEU  -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_GEU),
-                BGE   -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_GE),
+                BEQ    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_EQ),
+                BNE    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NE),
+                BLTU   -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_LTU),
+                BLT    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_LT),
+                BGEU   -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_GEU),
+                BGE    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_GE),
 
                 // U-type instructions
-                LUI   -> List(Y, A_MUX_Z,  B_MUX_IMM,  OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, UImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
-                AUIPC -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, UImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NONE),
+                LUI    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_COPY, REG_WEN_1, MEM_WEN_0, MEM_REN_0, UImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                AUIPC  -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, UImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
 
                 // I/J-type instructions
-                JAL   -> List(Y, A_MUX_Z,  B_MUX_IMM,  OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, JImm, REG_MUX_PC_4,  PC_MUX_PC_OFFSET,    BR_NONE),
-                JALR  -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_PC_4,  PC_MUX_PC_OFFSET_RS, BR_NONE),
+                JAL    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, JImm, REG_MUX_PC_4,  PC_MUX_PC_OFFSET,    BR_N),
+                JALR   -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_PC_4,  PC_MUX_PC_OFFSET_RS, BR_N),
 
                 // Load instructions
-                LB    -> List(Y, A_MUX_RS1, B_MUX_IMM,  OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_1, IImm, REG_MUX_PC_4, PC_MUX_PC_4,         BR_NONE),
-                LH    -> List(Y, A_MUX_RS1, B_MUX_IMM,  OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_1, IImm, REG_MUX_PC_4, PC_MUX_PC_4,         BR_NONE),
-                LW    -> List(Y, A_MUX_RS1, B_MUX_IMM,  OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_1, IImm, REG_MUX_PC_4, PC_MUX_PC_4,         BR_NONE),
-                LBU   -> List(Y, A_MUX_RS1, B_MUX_IMM,  OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_1, IImm, REG_MUX_PC_4, PC_MUX_PC_4,         BR_NONE),
-                LHU   -> List(Y, A_MUX_RS1, B_MUX_IMM,  OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_1, IImm, REG_MUX_PC_4, PC_MUX_PC_4,         BR_NONE),
+                LB     -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_1, IImm, REG_MUX_PC_4,  PC_MUX_PC_4,         BR_N),
+                LH     -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_1, IImm, REG_MUX_PC_4,  PC_MUX_PC_4,         BR_N),
+                LW     -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_1, IImm, REG_MUX_PC_4,  PC_MUX_PC_4,         BR_N),
+                LBU    -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_1, IImm, REG_MUX_PC_4,  PC_MUX_PC_4,         BR_N),
+                LHU    -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_1, IImm, REG_MUX_PC_4,  PC_MUX_PC_4,         BR_N),
 
                 // Store instructions
-                SB    -> List(Y, A_MUX_RS1, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_1, MEM_REN_0, SImm, REG_MUX_PC_4, PC_MUX_PC_4,         BR_NONE),
-                SH    -> List(Y, A_MUX_RS1, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_1, MEM_REN_0, SImm, REG_MUX_PC_4, PC_MUX_PC_4,         BR_NONE),
-                SW    -> List(Y, A_MUX_RS1, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_1, MEM_REN_0, SImm, REG_MUX_PC_4, PC_MUX_PC_4,         BR_NONE),
+                SB     -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_0, MEM_WEN_1, MEM_REN_0, SImm, REG_MUX_PC_4,  PC_MUX_PC_4,         BR_N),
+                SH     -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_0, MEM_WEN_1, MEM_REN_0, SImm, REG_MUX_PC_4,  PC_MUX_PC_4,         BR_N),
+                SW     -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_0, MEM_WEN_1, MEM_REN_0, SImm, REG_MUX_PC_4,  PC_MUX_PC_4,         BR_N),
+
+                FENCE  -> List(),
+                ECALL  -> List(),
+                EBREAK -> List(),
             )
         )
 }

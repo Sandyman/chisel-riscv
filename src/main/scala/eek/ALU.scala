@@ -17,6 +17,7 @@ object Operation {
     val OP_SRA    =  8.U(4.W)
     val OP_OR     =  9.U(4.W)
     val OP_AND    = 10.U(4.W)
+    val OP_COPY   = 11.U(4.W)
 }
 
 import Operation._
@@ -55,18 +56,19 @@ class AluSimple(val xlen: Int) extends AluGen {
 
     io.yData := MuxLookup(
         io.oper,
-        io.aData,
+        0.U(xlen.W),
         Seq(
-            OP_ADD -> add(io.bData),
-            OP_SUB -> add(-io.bData),
-            OP_SLL -> sll(io.bData),
-            OP_SLT -> slt(io.bData),
+            OP_ADD  -> add(io.bData),
+            OP_SUB  -> add(-io.bData),
+            OP_SLL  -> sll(io.bData),
+            OP_SLT  -> slt(io.bData),
             OP_SLTU -> sltu(io.bData),
-            OP_XOR -> xor(io.bData),
-            OP_SRL -> srl(io.bData),
-            OP_SRA -> sra(io.bData),
-            OP_OR -> or(io.bData),
-            OP_AND -> and(io.bData),
+            OP_XOR  -> xor(io.bData),
+            OP_SRL  -> srl(io.bData),
+            OP_SRA  -> sra(io.bData),
+            OP_OR   -> or(io.bData),
+            OP_AND  -> and(io.bData),
+            OP_COPY -> io.bData,
         )
     )
 }

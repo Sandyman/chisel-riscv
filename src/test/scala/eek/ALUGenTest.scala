@@ -39,18 +39,19 @@ class AluGenTester(alugen: => AluGen, count: => Int, oper: => UInt) extends Basi
 
     val out = MuxLookup(
         oper,
-        add(rs1(0), rs2(0)),
+        0.U(xlen.W),
         Seq(
-            OP_ADD -> add(rs1, rs2),
-            OP_SUB -> sub(rs1, rs2),
-            OP_SLL -> sll(rs1, rs2),
-            OP_SLT -> slt(rs1, rs2),
+            OP_ADD  -> add(rs1, rs2),
+            OP_SUB  -> sub(rs1, rs2),
+            OP_SLL  -> sll(rs1, rs2),
+            OP_SLT  -> slt(rs1, rs2),
             OP_SLTU -> sltu(rs1, rs2),
-            OP_XOR -> xor(rs1, rs2),
-            OP_SRL -> srl(rs1, rs2),
-            OP_SRA -> sra(rs1, rs2),
-            OP_OR -> or(rs1, rs2),
-            OP_AND -> and(rs1, rs2),
+            OP_XOR  -> xor(rs1, rs2),
+            OP_SRL  -> srl(rs1, rs2),
+            OP_SRA  -> sra(rs1, rs2),
+            OP_OR   -> or(rs1, rs2),
+            OP_AND  -> and(rs1, rs2),
+            OP_COPY -> rs2,
         )
     )
 
@@ -94,5 +95,8 @@ class AluGenTests extends AnyFlatSpec with ChiselScalatestTester {
     }
     "ALU AND" should "pass" in {
         test(new AluGenTester(new AluSimple(xlen), count, OP_AND)).runUntilStop()
+    }
+    "ALU COPY" should "pass" in {
+        test(new AluGenTester(new AluSimple(xlen), count, OP_COPY)).runUntilStop()
     }
 }

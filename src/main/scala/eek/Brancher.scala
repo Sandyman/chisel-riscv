@@ -6,7 +6,7 @@ import chisel3.util._
 import chisel3.experimental._
 
 object BranchType {
-    val BR_NONE   = 0.U(3.W)
+    val BR_N      = 0.U(3.W)
     val BR_EQ     = 2.U(3.W)
     val BR_NE     = 3.U(3.W)
     val BR_LT     = 4.U(3.W)
@@ -41,7 +41,7 @@ class BrancherGenSimple(val xlen: Int) extends BrancherGen {
 
     io.br_assert := MuxLookup(
         io.sel,
-        0.B,
+        false.B,
         Seq(
             BR_EQ -> eq,
             BR_NE -> ne,
