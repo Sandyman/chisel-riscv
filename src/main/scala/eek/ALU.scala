@@ -6,7 +6,7 @@ import chisel3.util._
 import chisel3.experimental._
 
 object Operation {
-    val OP_NONE   =  0.U(4.W)
+    val OP_X      =  0.U(4.W)
     val OP_ADD    =  1.U(4.W)
     val OP_SUB    =  2.U(4.W)
     val OP_SLL    =  3.U(4.W)

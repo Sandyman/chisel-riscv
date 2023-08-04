@@ -12,23 +12,27 @@ object Signal {
 object AluAMux {
     val A_MUX_RS1  = 0.U(1.W)
     val A_MUX_PC   = 1.U(1.W)
+    val A_MUX_X    = 0.U(1.W)
 }
 
 object AluBMux {
     val B_MUX_RS2  = 0.U(1.W)
     val B_MUX_IMM  = 1.U(1.W)
+    val B_MUX_X    = 0.U(1.W)
 }
 
 object RegMux {
     val REG_MUX_ALU_Y = 0.U(2.W)
     val REG_MUX_PC_4  = 1.U(2.W)
     val REG_MUX_D_OUT = 2.U(2.W)
+    val REG_MUX_X     = 0.U(2.W)
 }
 
 object PCMux {
     val PC_MUX_PC_4         = 0.U(2.W)
     val PC_MUX_PC_OFFSET_RS = 1.U(2.W)
     val PC_MUX_PC_OFFSET    = 2.U(2.W)
+    val PC_MUX_X            = 0.U(2.W)
 }
 
 object RegRWEnable {
@@ -85,7 +89,7 @@ class SimpleCtrl(val xlen: Int) extends Ctrl {
 
     val ctrl_signals =
         ListLookup(io.inst,
-                          List(N, A_MUX_RS1, B_MUX_RS2, OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0,  IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                          List(N, A_MUX_X,   B_MUX_X,   OP_X,    REG_WEN_0, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
             Array(
                 // I-type instructions
                 ADDI   -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
@@ -111,12 +115,12 @@ class SimpleCtrl(val xlen: Int) extends Ctrl {
                 AND    -> List(Y, A_MUX_RS1, B_MUX_RS2, OP_AND,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
 
                 // B-type instructions
-                BEQ    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_EQ),
-                BNE    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NE),
-                BLTU   -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_LTU),
-                BLT    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_LT),
-                BGEU   -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_GEU),
-                BGE    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_ADD,  REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_GE),
+                BEQ    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_X,    REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_EQ),
+                BNE    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_X,    REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_NE),
+                BLTU   -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_X,    REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_LTU),
+                BLT    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_X,    REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_LT),
+                BGEU   -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_X,    REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_GEU),
+                BGE    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_X,    REG_WEN_0, MEM_WEN_0, MEM_REN_0, BImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_GE),
 
                 // U-type instructions
                 LUI    -> List(Y, A_MUX_PC, B_MUX_IMM,  OP_COPY, REG_WEN_1, MEM_WEN_0, MEM_REN_0, UImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
@@ -138,9 +142,10 @@ class SimpleCtrl(val xlen: Int) extends Ctrl {
                 SH     -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_0, MEM_WEN_1, MEM_REN_0, SImm, REG_MUX_PC_4,  PC_MUX_PC_4,         BR_N),
                 SW     -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_0, MEM_WEN_1, MEM_REN_0, SImm, REG_MUX_PC_4,  PC_MUX_PC_4,         BR_N),
 
-                FENCE  -> List(),
-                ECALL  -> List(),
-                EBREAK -> List(),
+                // System instructions
+                FENCE  -> List(Y, A_MUX_X,   B_MUX_X,   OP_X,    REG_WEN_0, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_X,     PC_MUX_PC_4,         BR_N),
+                ECALL  -> List(Y, A_MUX_X,   B_MUX_X,   OP_X,    REG_WEN_0, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_X,     PC_MUX_PC_4,         BR_N),
+                EBREAK -> List(Y, A_MUX_X,   B_MUX_X,   OP_X,    REG_WEN_0, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_X,     PC_MUX_PC_4,         BR_N),
             )
         )
 }
