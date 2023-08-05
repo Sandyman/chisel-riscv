@@ -86,10 +86,11 @@ trait Ctrl extends Module {
 
 class SimpleCtrl(val xlen: Int) extends Ctrl {
     val io = IO(new CtrlIO(xlen))
+    io := DontCare
 
     val ctrl_signals =
         ListLookup(io.inst,
-                          List(N, A_MUX_X,   B_MUX_X,   OP_X,    REG_WEN_0, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
+                          List(N, A_MUX_X,   B_MUX_X,   OP_X,    REG_WEN_0, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_X,     PC_MUX_PC_4,         BR_N),
             Array(
                 // I-type instructions
                 ADDI   -> List(Y, A_MUX_RS1, B_MUX_IMM, OP_ADD,  REG_WEN_1, MEM_WEN_0, MEM_REN_0, IImm, REG_MUX_ALU_Y, PC_MUX_PC_4,         BR_N),
